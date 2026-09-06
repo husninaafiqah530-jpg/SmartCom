@@ -1,0 +1,2217 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMARTCOM - Sistem e-Aduan Politeknik Nilai</title>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Supabase CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 250px;
+      max-height: 320px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 280px;
+      }
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+    button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <nav class="bg-slate-900 text-slate-200 text-xs border-b border-slate-800 py-2.5 px-4 sticky top-0 z-50 shadow-md">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchMainTab('landing')">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[10px] font-bold border border-emerald-500/30 uppercase tracking-wider">PORTAL AKTIF</span>
+        <span class="font-semibold text-slate-100 tracking-tight text-[12px]">SMARTCOM • Sistem e-Aduan Politeknik Nilai</span>
+      </div>
+      
+      <!-- Main Nav Buttons -->
+      <div class="flex flex-wrap items-center gap-1.5 font-medium">
+        <button type="button" onclick="switchMainTab('landing')" id="tab-btn-home" class="px-3 py-1.5 rounded-md bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition flex items-center gap-1.5">
+          <span class="font-mono text-[10px] text-slate-400">[0]</span>
+          <span>Utama</span>
+        </button>
+        <button type="button" onclick="switchMainTab('buat-aduan')" id="tab-btn-buat" class="px-3 py-1.5 rounded-md bg-blue-600 text-white font-bold transition shadow flex items-center gap-1.5">
+          <span class="font-mono text-[10px] text-blue-200">[1]</span>
+          <span>Buat Aduan</span>
+        </button>
+        <button type="button" onclick="switchMainTab('semak-status')" id="tab-btn-semak" class="px-3 py-1.5 rounded-md bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition flex items-center gap-1.5">
+          <span class="font-mono text-[10px] text-slate-400">[2]</span>
+          <span>Semak Status</span>
+        </button>
+        <button type="button" onclick="switchMainTab('login')" id="tab-btn-login" class="px-3 py-1.5 rounded-md bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition flex items-center gap-1.5">
+          <span class="font-mono text-[10px] text-slate-400">[3]</span>
+          <span>Portal Log Masuk</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <div id="app-container" class="flex flex-col min-h-screen">
+
+    <!-- Header Banner -->
+    <header class="bg-blue-950 text-white border-b border-blue-900 shadow-md">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center py-5 gap-3">
+        
+        <!-- Institutional Branding -->
+        <div class="flex items-center space-x-3.5">
+          <div class="w-11 h-11 rounded-xl bg-blue-600 border border-blue-400 flex items-center justify-center font-bold text-white text-lg tracking-tight shrink-0 shadow-inner">
+            PN
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-xl font-black text-white tracking-tight">SMARTCOM <span class="font-light text-blue-300 mx-1">|</span> Sistem e-Aduan Politeknik Nilai</h1>
+              <span class="bg-blue-500/20 text-blue-200 text-[10px] uppercase font-bold px-2 py-0.5 rounded border border-blue-400/20 tracking-wider">Bandar Enstek</span>
+            </div>
+            <p class="text-xs text-blue-200 mt-0.5">Portal Laporan Penyelenggaraan, Tugasan Juruteknik & Pengurusan Kampus</p>
+          </div>
+        </div>
+
+        <!-- Quick Info Box -->
+        <div class="flex items-center gap-3 text-xs">
+          <div class="bg-blue-900/60 px-3.5 py-2 rounded-xl border border-blue-800 text-blue-100 flex items-center gap-2 shadow-sm font-mono text-[11px]">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Helpdesk UPP: <strong>06-798 4000</strong></span>
+          </div>
+        </div>
+
+      </div>
+    </header>
+
+
+    <!-- Dynamic Content Area -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <section id="section-landing" class="space-y-8">
+        
+        <!-- Hero Title Banner -->
+        <div class="text-center max-w-3xl mx-auto space-y-2.5 pt-2">
+          <span class="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-[11px] font-semibold tracking-wider uppercase">
+            Sistem SMARTCOM • Pusat Perkhidmatan & Operasi Kampus
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Portal Aduan Pelajar, Pentadbir & Juruteknik
+          </h2>
+          <p class="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            Sila pilih perkhidmatan yang diperlukan daripada modul di bawah. Pelajar dan Staf boleh membuat aduan secara terus, manakala Pentadbir & Juruteknik mempunyai portal khas tugasan.
+          </p>
+        </div>
+
+        <!-- 4 MAIN ACTION CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 max-w-7xl mx-auto">
+          
+          <!-- CARD 1: BUAT ADUAN -->
+          <div onclick="switchMainTab('buat-aduan')" class="bg-white rounded-2xl border border-slate-200 hover:border-blue-600 shadow-sm hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 relative overflow-hidden">
+            <div class="relative z-10 space-y-4">
+              <div class="flex justify-between items-start">
+                <div class="w-10 h-10 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 font-mono font-bold text-sm flex items-center justify-center">
+                  01
+                </div>
+                <span class="text-[10px] font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200 uppercase tracking-wider">Pelajar/Staf</span>
+              </div>
+              
+              <div>
+                <h3 class="text-base font-bold text-slate-900 tracking-tight group-hover:text-blue-700 transition">
+                  Hantar Laporan Aduan
+                </h3>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Laporkan isu kerosakan penghawa dingin, Wi-Fi, elektrik, atau fasiliti.
+                </p>
+              </div>
+            </div>
+
+            <div class="relative z-10 pt-6 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-blue-700">
+              <span>Buka Borang</span>
+              <span class="font-mono text-slate-400 group-hover:text-blue-700 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </div>
+
+          <!-- CARD 2: SEMAK STATUS -->
+          <div onclick="switchMainTab('semak-status')" class="bg-white rounded-2xl border border-slate-200 hover:border-amber-500 shadow-sm hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 relative overflow-hidden">
+            <div class="relative z-10 space-y-4">
+              <div class="flex justify-between items-start">
+                <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 font-mono font-bold text-sm flex items-center justify-center">
+                  02
+                </div>
+                <span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200 uppercase tracking-wider">Pelapor</span>
+              </div>
+
+              <div>
+                <h3 class="text-base font-bold text-slate-900 tracking-tight group-hover:text-amber-700 transition">
+                  Semak Status Tiket
+                </h3>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Masukkan nombor tiket aduan khas anda untuk menyemak tindakan.
+                </p>
+              </div>
+            </div>
+
+            <div class="relative z-10 pt-6 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-amber-800">
+              <span>Semak Tiket</span>
+              <span class="font-mono text-slate-400 group-hover:text-amber-800 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </div>
+
+          <!-- CARD 3: PORTAL PENGURUSAN -->
+          <div onclick="switchMainTab('login'); selectLoginRole('Admin');" class="bg-white rounded-2xl border border-slate-200 hover:border-slate-800 shadow-sm hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 relative overflow-hidden">
+            <div class="relative z-10 space-y-4">
+              <div class="flex justify-between items-start">
+                <div class="w-10 h-10 rounded-xl bg-slate-100 border border-slate-300 text-slate-800 font-mono font-bold text-sm flex items-center justify-center">
+                  03
+                </div>
+                <span class="text-[10px] font-semibold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-300 uppercase tracking-wider">Pentadbir</span>
+              </div>
+
+              <div>
+                <h3 class="text-base font-bold text-slate-900 tracking-tight group-hover:text-slate-800 transition">
+                  Portal Pentadbir (Admin)
+                </h3>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Kawalan penuh aduan, pengagihan tugasan, pengurusan pendaftaran juruteknik, dan analitik KPI kampus.
+                </p>
+              </div>
+            </div>
+
+            <div class="relative z-10 pt-6 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-slate-800">
+              <span>Log Masuk Admin</span>
+              <span class="font-mono text-slate-400 group-hover:text-slate-800 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </div>
+
+          <!-- CARD 4: PORTAL JURUTEKNIK -->
+          <div onclick="switchMainTab('login'); selectLoginRole('Juruteknik');" class="bg-white rounded-2xl border border-slate-200 hover:border-emerald-600 shadow-sm hover:shadow-lg transition-all duration-200 p-6 flex flex-col justify-between cursor-pointer group hover:-translate-y-0.5 relative overflow-hidden">
+            <div class="relative z-10 space-y-4">
+              <div class="flex justify-between items-start">
+                <div class="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 font-mono font-bold text-sm flex items-center justify-center">
+                  04
+                </div>
+                <span class="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 uppercase tracking-wider">Staf Teknikal</span>
+              </div>
+
+              <div>
+                <h3 class="text-base font-bold text-slate-900 tracking-tight group-hover:text-emerald-700 transition">
+                  Portal Juruteknik
+                </h3>
+                <p class="text-xs text-slate-600 mt-2 leading-relaxed">
+                  Ruang kerja juruteknik untuk melihat tugasan khas yang diagihkan, kemaskini status kerja, dan semak <strong>Prestasi KPI</strong>.
+                </p>
+              </div>
+            </div>
+
+            <div class="relative z-10 pt-6 mt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-emerald-700">
+              <span>Tugasan Saya</span>
+              <span class="font-mono text-slate-400 group-hover:text-emerald-700 group-hover:translate-x-1 transition-transform">→</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Operational Status Bar -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-xs">
+          <div class="flex items-center gap-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <span class="font-semibold text-slate-800">Status Operasi Penyelenggaraan:</span>
+            <span class="text-slate-600">Semua unit penyelenggaraan (IT, Elektrik, UPP, HEP) beroperasi aktif.</span>
+          </div>
+          <div class="flex gap-4 font-mono text-xs text-slate-700">
+            <span>Aduan Keseluruhan: <strong class="text-blue-700 font-sans" id="hero-total-count">0</strong></span>
+            <span class="text-slate-300">|</span>
+            <span>Juruteknik Bertugas: <strong class="text-emerald-700 font-sans" id="hero-tech-count">0 Orang</strong></span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 1: BUAT ADUAN -->
+      <!-- ========================================== -->
+      <section id="section-buat-aduan" class="hidden space-y-6">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-blue-600 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-slate-900 tracking-tight">Borang Laporan Aduan Kampus</h2>
+              <span class="bg-slate-100 text-slate-700 text-[10px] font-semibold px-2 py-0.5 rounded border border-slate-200">Tanpa Log Masuk</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">
+              Borang ini disediakan untuk kegunaan Pelajar, Pensyarah, dan Staf. Sila berikan maklumat kerosakan secara terperinci.
+            </p>
+          </div>
+          <button type="button" onclick="switchMainTab('semak-status')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl border border-slate-300 transition shrink-0">
+            Semak Tiket Sedia Ada →
+          </button>
+        </div>
+
+        <!-- Form Card -->
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm max-w-4xl mx-auto space-y-6">
+          
+          <div class="border-b border-slate-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              Maklumat Aduan & Pelapor
+            </h3>
+          </div>
+
+          <form id="publicSubmitForm" onsubmit="handlePublicFormSubmit(event)" class="space-y-5 text-xs">
+            
+            <!-- User Category Selection -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-2">Kategori Pelapor *</label>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <label class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl bg-slate-50 hover:bg-blue-50/40 cursor-pointer transition">
+                  <input type="radio" name="reporterRole" value="Pelajar" checked onchange="updateRolePlaceholder('Pelajar')" class="accent-blue-600">
+                  <div>
+                    <span class="font-bold block text-slate-800">Pelajar</span>
+                    <span class="text-[10px] text-slate-500 font-mono">Alamat E-mel</span>
+                  </div>
+                </label>
+                <label class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl bg-slate-50 hover:bg-blue-50/40 cursor-pointer transition">
+                  <input type="radio" name="reporterRole" value="Pensyarah" onchange="updateRolePlaceholder('Pensyarah')" class="accent-blue-600">
+                  <div>
+                    <span class="font-bold block text-slate-800">Pensyarah / Staf</span>
+                    <span class="text-[10px] text-slate-500 font-mono">Alamat E-mel</span>
+                  </div>
+                </label>
+                <label class="flex items-center gap-2.5 p-3 border border-slate-200 rounded-xl bg-slate-50 hover:bg-blue-50/40 cursor-pointer transition col-span-2 sm:col-span-1">
+                  <input type="radio" name="reporterRole" value="Pelawat" onchange="updateRolePlaceholder('Pelawat')" class="accent-blue-600">
+                  <div>
+                    <span class="font-bold block text-slate-800">Pelawat / Awam</span>
+                    <span class="text-[10px] text-slate-500 font-mono">Alamat E-mel</span>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Name & ID Row -->
+            <div id="personal-info-row" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Penuh *</label>
+                <input type="text" id="form-name" required placeholder="Contoh: Encik Ahmad Amirul" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs">
+              </div>
+              <div>
+                <label id="label-id-input" class="block font-bold text-slate-700 mb-1">Alamat E-mel *</label>
+                <input type="email" id="form-email" required placeholder="Contoh: nama@email.com" autocomplete="email" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs">
+              </div>
+            </div>
+
+            <!-- Department & Unit Target -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Jabatan / Pusat / Unit *</label>
+                <input type="text" id="form-jabatan" required placeholder="Contoh: Jabatan Perdagangan" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Jenis Kerosakan / Unit Target *</label>
+                <select id="form-unit" required class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-semibold text-blue-900 text-xs">
+                  <option value="Unit UPP">Aircond, Elektrik, Paip & Fasiliti — Unit UPP</option>
+                  <option value="Unit ICT">Internet/Wi-Fi, Komputer & Projektor — Unit ICT</option>
+                  <option value="Unit PIPD">Bangunan, Perabot & Kemudahan Fizikal — Unit PIPD</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Tahap Keutamaan *</label>
+                <select id="form-urgency" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs">
+                  <option value="Biasa">Biasa (Rutin)</option>
+                  <option value="Sederhana" selected>Sederhana (Kesan Operasi)</option>
+                  <option value="Tinggi">Tinggi / Kecemasan (Kesan Serta-Merta)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Location & Subject -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Lokasi / Blok & Bilik *</label>
+                <input type="text" id="form-location" required placeholder="Contoh: Makmal Bahasa" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs">
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Tajuk Ringkas Aduan *</label>
+                <input type="text" id="form-subject" required placeholder="Contoh: Aircond bilik kuliah tidak sejuk" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs">
+              </div>
+            </div>
+
+            <!-- Detailed Description -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Penerangan Terperinci *</label>
+              <textarea id="form-details" rows="3" required placeholder="Jelaskan butiran perincian isu kerosakan..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none text-xs"></textarea>
+            </div>
+
+            <!-- Optional Evidence Image -->
+            <div class="p-4 bg-slate-50 border border-dashed border-slate-300 rounded-xl">
+              <label class="block font-bold text-slate-700 mb-1">Gambar Bukti Kerosakan <span class="font-normal text-slate-500">(Tidak wajib)</span></label>
+              <p class="text-[11px] text-slate-500 mb-3">Muat naik satu gambar JPG, PNG atau WEBP. Saiz maksimum 5 MB.</p>
+              <input type="file" id="form-evidence-image" accept="image/jpeg,image/png,image/webp" onchange="previewEvidenceImage(event)" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-100 file:text-blue-800 file:font-bold hover:file:bg-blue-200 cursor-pointer">
+              <div id="evidence-preview-wrapper" class="hidden mt-3">
+                <img id="evidence-preview" alt="Pratonton gambar bukti" class="max-h-52 rounded-xl border border-slate-300 object-contain bg-white">
+                <button type="button" onclick="clearEvidenceImage()" class="mt-2 px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-semibold">Buang Gambar</button>
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-2">
+              <button type="submit" class="w-full py-3.5 px-6 bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-bold rounded-xl shadow transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider">
+                <span>Hantar Laporan Aduan</span>
+                <span class="font-mono">→</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 2: SEMAK STATUS ADUAN (STRICTLY PRIVATE) -->
+      <!-- ========================================== -->
+      <section id="section-semak-status" class="hidden space-y-6">
+        
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm border-l-4 border-l-amber-500 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 max-w-2xl mx-auto">
+          <div>
+            <h2 class="text-base font-bold text-slate-900 tracking-tight">Semak Status Tiket Peribadi</h2>
+            <p class="text-xs text-slate-600 mt-1">
+              Untuk tujuan kerahsiaan dan privasi, sila masukkan ID Tiket aduan khas anda di bawah.
+            </p>
+          </div>
+        </div>
+
+        <!-- Search Box Widget -->
+        <div class="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200 shadow-sm max-w-2xl mx-auto space-y-5">
+          <div>
+            <label class="block font-bold text-slate-800 text-xs uppercase tracking-wider mb-1">Masukkan Nombor Tiket ID:</label>
+            <p class="text-[11px] text-slate-500 mb-3">ID Tiket telah diberikan secara automatik selepas borang aduan dihantar.</p>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input type="text" id="lookup-ticket-input" placeholder="Contoh: PN-001" class="flex-1 p-3.5 bg-slate-50 border border-slate-300 rounded-xl font-mono text-sm font-bold focus:ring-2 focus:ring-amber-500 focus:outline-none uppercase tracking-wide">
+              <button type="button" onclick="performTicketLookup()" class="px-6 py-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition shrink-0 flex items-center justify-center gap-1.5">
+                <span>Cari Status Tiket</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Privacy Security Notice -->
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
+            <div class="font-bold text-slate-800 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              <span>Perlindungan Data & Kerahsiaan</span>
+            </div>
+            <p>
+              Senarai keseluruhan aduan hanya boleh diakses oleh pihak Pentadbir & Juruteknik yang disahkan menerusi <strong>Portal Pengurusan & Juruteknik</strong>.
+            </p>
+          </div>
+        </div>
+
+        <!-- Lookup Result Display Box -->
+        <div id="lookup-result-card" class="max-w-2xl mx-auto">
+          <!-- Dynamically Injected by JS -->
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 3: MANAGEMENT LOGIN PORTAL -->
+      <!-- ========================================== -->
+      <section id="section-login" class="hidden min-h-[60vh] flex flex-col justify-center items-center py-6">
+        
+        <div class="max-w-md w-full bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden space-y-6 p-6 sm:p-8">
+          
+          <div class="text-center space-y-2">
+            <div class="w-12 h-12 rounded-xl bg-blue-950 border border-blue-700 mx-auto flex items-center justify-center font-bold text-white text-lg shadow-sm">
+              PN
+            </div>
+            <h2 class="text-lg font-bold text-slate-900 tracking-tight" id="login-title">Portal Log Masuk Sistem</h2>
+            <p class="text-xs text-slate-500" id="login-subtitle">Akses Khas Admin & Juruteknik Kampus</p>
+          </div>
+
+          <!-- Login Role Switcher -->
+          <div class="grid grid-cols-2 gap-2 text-xs font-semibold">
+            <button type="button" onclick="selectLoginRole('Admin')" id="login-role-admin" class="p-2.5 border-2 border-blue-600 bg-blue-50 text-blue-900 rounded-xl text-center font-bold transition">
+              Pentadbir (Admin)
+            </button>
+            <button type="button" onclick="selectLoginRole('Juruteknik')" id="login-role-tech" class="p-2.5 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl text-center hover:bg-slate-100 transition">
+              Portal Juruteknik
+            </button>
+          </div>
+
+          <form onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs">
+            
+            <div id="login-userid-wrapper">
+              <label class="block font-bold text-slate-700 mb-1" id="login-id-label">ID Pengguna / Staf ID Pentadbir</label>
+              <input type="text" id="login-userid" required placeholder="Masukkan ID pengguna" autocomplete="username" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+            </div>
+
+            <!-- Technician Quick Select Options -->
+            <div id="tech-select-wrapper" class="hidden space-y-2">
+              <label class="block font-bold text-slate-700 mb-1">Atau Pilih Juruteknik Berdaftar:</label>
+              <select id="login-tech-dropdown" onchange="syncTechDropdownToInput()" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl font-bold text-blue-900 text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                <!-- Injected via JS -->
+              </select>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Kata Laluan</label>
+              <input type="password" id="login-password" required placeholder="Masukkan kata laluan" autocomplete="current-password" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+            </div>
+
+            <button type="submit" id="login-submit-btn" class="w-full py-3.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow transition text-xs border border-blue-600 uppercase tracking-wider">
+              Log Masuk Pentadbir
+            </button>
+          </form>
+
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-500 text-center">
+            Politeknik Nilai • Hak Cipta Terpelihara
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 4: MANAGEMENT DASHBOARD & ANALYTICS (ADMIN) -->
+      <!-- ========================================== -->
+      <section id="section-dashboard" class="hidden space-y-6">
+        
+        <!-- Header Banner -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-l-4 border-l-emerald-600">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-base font-bold text-slate-900 tracking-tight">Papan Pemuka Pentadbir — Encik Zakaria Abdullah</h2>
+              <span class="bg-emerald-50 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-emerald-200">Akses Admin Sulit</span>
+            </div>
+            <p class="text-xs text-slate-600 mt-1">
+              Pusat kawalan Pentadbir untuk agih tugasan, mengurus senarai juruteknik, dan memantau prestasi KPI.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <button type="button" onclick="deleteAllComplaints()" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow transition flex items-center gap-1.5">
+              <span>🗑️ Kosongkan & Format Sistem</span>
+            </button>
+            <button type="button" onclick="logoutAdmin()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition shadow-sm">
+              Log Keluar Admin
+            </button>
+          </div>
+        </div>
+
+        <!-- Sub-Nav Tabs for Admin -->
+        <div class="flex flex-wrap border-b border-slate-200 gap-2 text-xs font-bold">
+          <button type="button" onclick="switchAdminSubSection('tickets')" id="admin-subtab-tickets" class="pb-3 px-4 border-b-2 border-blue-600 text-blue-700">
+            Senarai & Pengurusan Aduan
+          </button>
+          <button type="button" onclick="switchAdminSubSection('techs')" id="admin-subtab-techs" class="pb-3 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+            Pengurusan Juruteknik (<span id="count-tech-badge">0</span>)
+          </button>
+          <button type="button" onclick="switchAdminSubSection('analytics')" id="admin-subtab-analytics" class="pb-3 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+            Laporan Analitik & KPI
+          </button>
+          <button type="button" onclick="switchAdminSubSection('password')" id="admin-subtab-password" class="pb-3 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-800">
+            Tukar Kata Laluan
+          </button>
+        </div>
+
+        <!-- ADMIN SUB-SECTION 1: TICKET MANAGEMENT TABLE -->
+        <div id="admin-section-tickets" class="space-y-6">
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Jumlah Laporan</span>
+                <span id="kpi-card-total" class="text-2xl font-black text-slate-900 mt-1 block">0</span>
+                <span class="text-[10px] text-emerald-600 font-semibold">Semua aduan terakam</span>
+              </div>
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-xs text-blue-700 font-bold font-mono">
+                ALL
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Aduan Selesai</span>
+                <span id="kpi-card-resolved" class="text-2xl font-black text-emerald-600 mt-1 block">0</span>
+                <span class="text-[10px] text-slate-500 font-medium">Purata masa: 18.5 jam</span>
+              </div>
+              <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-xs text-emerald-700 font-bold font-mono">
+                OK
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Dalam Proses</span>
+                <span id="kpi-card-pending" class="text-2xl font-black text-amber-600 mt-1 block">0</span>
+                <span class="text-[10px] text-amber-700 font-semibold">Tugasan Juruteknik</span>
+              </div>
+              <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-xs text-amber-700 font-bold font-mono">
+                WIP
+              </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Belum Diagih</span>
+                <span id="kpi-card-urgent" class="text-2xl font-black text-red-600 mt-1 block">0</span>
+                <span class="text-[10px] text-red-600 font-semibold">Memerlukan Tindakan</span>
+              </div>
+              <div class="w-9 h-9 rounded-xl bg-red-50 border border-red-200 flex items-center justify-center text-xs text-red-700 font-bold font-mono">
+                NEW
+              </div>
+            </div>
+          </div>
+
+          <!-- Table Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-4 p-5">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                  <span>Senarai Penuh Laporan Aduan Kampus</span>
+                  <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">Akses Pentadbir</span>
+                </h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                  Klik <strong>"Agih / Urus"</strong> untuk menugaskan juruteknik, atau tandakan kotak untuk <strong>Padam Terpilih</strong>.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                <!-- Select All / Batch Delete Trigger -->
+                <button type="button" id="btn-delete-selected" onclick="deleteSelectedComplaints()" class="hidden px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs items-center gap-1 shadow-sm transition">
+                  🗑️ Padam Terpilih (<span id="delete-selected-count">0</span>)
+                </button>
+              </div>
+            </div>
+
+            <!-- Search inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+              <input type="text" id="admin-search-input" onkeyup="renderAdminTable()" placeholder="Cari Tiket ID, Nama, Tajuk..." class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              
+              <select id="admin-filter-unit" onchange="renderAdminTable()" class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-semibold">
+                <option value="">Semua Unit Bertindak</option>
+                <option value="Unit UPP">Unit UPP</option>
+                <option value="Unit ICT">Unit ICT</option>
+                <option value="Unit PIPD">Unit PIPD</option>
+              </select>
+
+              <select id="admin-filter-jabatan" onchange="renderAdminTable()" class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-semibold">
+                <option value="">Semua Jabatan</option>
+                <option value="JTMK">JTMK</option>
+                <option value="JKE">JKE</option>
+                <option value="JKAU">JKAU</option>
+                <option value="JPA">JPA</option>
+                <option value="UPP">UPP</option>
+              </select>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar mt-4">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 border-b border-slate-200 font-bold text-slate-700 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3 text-center w-10">
+                      <!-- MASTER CHECKBOX -->
+                      <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)" class="w-4 h-4 cursor-pointer">
+                    </th>
+                    <th class="p-3">ID Tiket</th>
+                    <th class="p-3">Pelapor / Peranan</th>
+                    <th class="p-3">Jabatan</th>
+                    <th class="p-3">Tajuk & Agihan Unit</th>
+                    <th class="p-3">Juruteknik Ditugaskan</th>
+                    <th class="p-3">Keutamaan</th>
+                    <th class="p-3">Status</th>
+                    <th class="p-3 text-center">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-complaints-tbody" class="divide-y divide-slate-100 bg-white">
+                  <!-- Dynamically Rendered -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ADMIN SUB-SECTION 2: TECHNICIAN MANAGEMENT -->
+        <div id="admin-section-techs" class="hidden space-y-6">
+          
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+            <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
+                  Daftar Juruteknik Baharu
+                </h3>
+              </div>
+            </div>
+
+            <form id="addTechnicianForm" onsubmit="handleAddTechnician(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Nama Penuh Juruteknik *</label>
+                <input type="text" id="add-tech-name" required placeholder="Contoh: Encik Hafiz Rahman" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Staf ID / ID Akses *</label>
+                <input type="text" id="add-tech-id" required placeholder="Contoh: TECH-HAFIZ" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-mono uppercase focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Unit / Kepakaran *</label>
+                <select id="add-tech-unit" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-semibold text-slate-800 focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <option value="Unit UPP">Unit UPP</option>
+                  <option value="Unit ICT">Unit ICT</option>
+                  <option value="Unit PIPD">Unit PIPD</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">No. Telefon</label>
+                <input type="text" id="add-tech-phone" placeholder="Contoh: 019-8765432" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Kata Laluan Permulaan *</label>
+                <input type="password" id="add-tech-password" required minlength="6" value="tech123" autocomplete="new-password" placeholder="Sekurang-kurangnya 6 aksara" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+
+              <div class="sm:col-span-2 lg:col-span-4 flex justify-end">
+                <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition text-xs flex items-center gap-1.5 uppercase tracking-wider">
+                  <span>+ Tambah Juruteknik</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Senarai Juruteknik Berdaftar</h3>
+              </div>
+            </div>
+
+            <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-100 border-b border-slate-200 font-bold text-slate-700 uppercase tracking-wider">
+                  <tr>
+                    <th class="p-3">ID Staf</th>
+                    <th class="p-3">Nama Juruteknik</th>
+                    <th class="p-3">Unit / Kepakaran</th>
+                    <th class="p-3">Telefon</th>
+                    <th class="p-3 text-center">Tugasan Aktif</th>
+                    <th class="p-3 text-center">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-technicians-tbody" class="divide-y divide-slate-100 bg-white">
+                  <!-- Dynamically Injected -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ADMIN SUB-SECTION 3: ANALYTICS & CHARTS -->
+        <div id="admin-section-analytics" class="hidden space-y-6">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Trend Volume Aduan Bulanan</h3></div>
+              </div>
+              <div class="chart-container"><canvas id="chartTrend"></canvas></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Agihan Mengikut Jabatan</h3></div>
+              </div>
+              <div class="chart-container"><canvas id="chartJabatan"></canvas></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Purata Masa Penyelesaian SLA (Jam)</h3></div>
+              </div>
+              <div class="chart-container"><canvas id="chartSla"></canvas></div>
+            </div>
+
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Status Tindakan Semasa</h3></div>
+              </div>
+              <div class="chart-container"><canvas id="chartStatus"></canvas></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ADMIN SUB-SECTION 4: CHANGE ADMIN PASSWORD -->
+        <div id="admin-section-password" class="hidden space-y-6">
+          <div class="max-w-xl bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="pb-4 mb-5 border-b border-slate-100">
+              <h3 class="text-sm font-bold text-slate-900">Tukar Kata Laluan Pentadbir</h3>
+              <p class="text-xs text-slate-500 mt-1">Masukkan kata laluan semasa sebelum menetapkan kata laluan baharu.</p>
+            </div>
+
+            <form id="changeAdminPasswordForm" onsubmit="handleChangeAdminPassword(event)" class="space-y-4 text-xs">
+              <div>
+                <label for="admin-current-password" class="block font-bold text-slate-700 mb-1">Kata Laluan Semasa</label>
+                <input type="password" id="admin-current-password" required autocomplete="current-password" placeholder="Masukkan kata laluan semasa" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+              <div>
+                <label for="admin-new-password" class="block font-bold text-slate-700 mb-1">Kata Laluan Baharu</label>
+                <input type="password" id="admin-new-password" required minlength="6" autocomplete="new-password" placeholder="Sekurang-kurangnya 6 aksara" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+              <div>
+                <label for="admin-confirm-password" class="block font-bold text-slate-700 mb-1">Sahkan Kata Laluan Baharu</label>
+                <input type="password" id="admin-confirm-password" required minlength="6" autocomplete="new-password" placeholder="Masukkan semula kata laluan baharu" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+              <button type="submit" class="w-full sm:w-auto px-5 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow transition uppercase tracking-wider">
+                Simpan Kata Laluan Baharu
+              </button>
+            </form>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 5: TECHNICIAN WORKSPACE & PERFORMANCE PORTAL -->
+      <!-- ========================================== -->
+      <section id="section-tech-workspace" class="hidden space-y-6">
+        
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-l-4 border-l-emerald-500">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 border border-emerald-300 text-emerald-800 font-black text-base flex items-center justify-center font-mono">
+              <span id="tech-profile-avatar">JT</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base font-bold text-slate-900 tracking-tight" id="tech-profile-name">Juruteknik</h2>
+                <span id="tech-profile-id" class="bg-emerald-50 text-emerald-800 text-[10px] font-mono font-bold px-2 py-0.5 rounded border border-emerald-200 uppercase">TECH</span>
+              </div>
+              <p class="text-xs text-slate-600 mt-0.5">
+                Unit Bertindak: <strong id="tech-profile-unit" class="text-blue-900">Unit</strong> • Status: <span class="text-emerald-700 font-semibold">Aktif Bertugas</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs">
+            <button type="button" onclick="openTechnicianPasswordModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl border border-emerald-700 transition">
+              Tukar Kata Laluan
+            </button>
+            <button type="button" onclick="logoutTechnician()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold rounded-xl border border-slate-300 transition">
+              Log Keluar Portal
+            </button>
+          </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+          <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                Prestasi KPI & Statistik Tugasan Saya
+              </h3>
+            </div>
+            <span class="px-2.5 py-1 bg-emerald-50 text-emerald-800 text-[11px] font-bold rounded-lg border border-emerald-200 font-mono">
+              SKOR KPI: <span id="tech-kpi-percentage">0%</span>
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
+            <div class="p-3.5 bg-slate-50 border border-slate-200 rounded-xl">
+              <span class="text-[10px] uppercase font-bold text-slate-400 block">Jumlah Diagih</span>
+              <span id="tech-card-assigned" class="text-2xl font-black text-slate-900 mt-1 block">0</span>
+            </div>
+            <div class="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+              <span class="text-[10px] uppercase font-bold text-emerald-800 block">Berjaya Diselesaikan</span>
+              <span id="tech-card-completed" class="text-2xl font-black text-emerald-700 mt-1 block">0</span>
+            </div>
+            <div class="p-3.5 bg-amber-50/60 border border-amber-200 rounded-xl">
+              <span class="text-[10px] uppercase font-bold text-amber-800 block">Sedang Dikerjakan</span>
+              <span id="tech-card-in-progress" class="text-2xl font-black text-amber-700 mt-1 block">0</span>
+            </div>
+            <div class="p-3.5 bg-blue-50/60 border border-blue-200 rounded-xl">
+              <span class="text-[10px] uppercase font-bold text-blue-900 block">Purata Masa SLA</span>
+              <span id="tech-card-sla-time" class="text-2xl font-black text-blue-900 mt-1 block">0 jam</span>
+            </div>
+          </div>
+          
+          <div class="pt-2">
+            <h4 class="text-xs font-bold text-slate-700 mb-2">Graf Agihan vs Penyelesaian Tugas Saya</h4>
+            <div class="chart-container">
+              <canvas id="chartTechPerformance"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900 flex items-center gap-2">
+                <span>Senarai Tugasan Aduan Diagihkan (Tugasan Saya)</span>
+              </h3>
+            </div>
+            <div class="flex gap-1 text-xs">
+              <button type="button" onclick="filterTechJobs('Semua')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 font-semibold rounded-lg text-slate-700">Semua</button>
+              <button type="button" onclick="filterTechJobs('Dalam Proses')" class="px-2.5 py-1 bg-amber-100 text-amber-800 font-semibold rounded-lg">Dalam Proses</button>
+              <button type="button" onclick="filterTechJobs('Selesai')" class="px-2.5 py-1 bg-emerald-100 text-emerald-800 font-semibold rounded-lg">Selesai</button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-100 border-b border-slate-200 font-bold text-slate-700 uppercase tracking-wider">
+                <tr>
+                  <th class="p-3">ID Tiket</th>
+                  <th class="p-3">Pelapor / Jabatan</th>
+                  <th class="p-3">Tajuk & Lokasi Aduan</th>
+                  <th class="p-3">Keutamaan</th>
+                  <th class="p-3">Status</th>
+                  <th class="p-3 text-center">Tindakan Juruteknik</th>
+                </tr>
+              </thead>
+              <tbody id="tech-jobs-tbody" class="divide-y divide-slate-100 bg-white">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 text-xs py-6 border-t border-slate-800 mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-3">
+        <div>
+          <span class="font-bold text-white block">SMARTCOM - Politeknik Nilai, Bandar Enstek</span>
+          <span>Sistem e-Aduan, Operasi Penyelenggaraan & Pengurusan Juruteknik</span>
+        </div>
+        <div class="text-right text-[11px] text-slate-500 font-mono">
+          Sesi Akademik 2026/2027
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ADMIN ASSIGN MODAL -->
+  <div id="ticket-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8">
+      <div class="bg-blue-950 text-white p-4 px-6 flex justify-between items-center border-b border-blue-900">
+        <div class="flex items-center gap-3">
+          <span id="modal-ticket-id" class="px-2.5 py-1 bg-blue-800 text-amber-300 font-mono font-bold text-xs rounded border border-blue-700">#PN-001</span>
+          <div>
+            <h3 class="text-sm font-bold text-white leading-tight">Pengagihan Tugasan</h3>
+            <span id="modal-ticket-date" class="text-[10px] text-blue-200 font-mono">Tarikh: -</span>
+          </div>
+        </div>
+        <button type="button" onclick="closeTicketModal()" class="w-7 h-7 rounded-lg bg-blue-900 hover:bg-red-600 text-white flex items-center justify-center text-xs font-mono transition">✕</button>
+      </div>
+
+      <div class="p-6 space-y-5 text-xs">
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Pelapor</span><strong id="modal-reporter-name" class="text-slate-800 text-xs">Nama</strong></div>
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">E-mel / Peranan</span><strong id="modal-reporter-id" class="text-slate-800 text-xs">E-mel</strong></div>
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Jabatan</span><strong id="modal-reporter-dept" class="text-slate-800 text-xs">Jabatan</strong></div>
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Keutamaan</span><span id="modal-urgency-badge" class="px-2 py-0.5 rounded font-bold text-[10px] bg-red-100 text-red-800 inline-block">Tinggi</span></div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="p-3 border border-slate-200 rounded-xl">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Agihan Unit Bertindak</span>
+            <div id="modal-unit" class="font-bold text-blue-900">Unit</div>
+            <div id="modal-location" class="text-slate-600 mt-1">Lokasi</div>
+          </div>
+          <div class="p-3 border border-slate-200 rounded-xl">
+            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Tajuk Aduan</span>
+            <div id="modal-subject" class="font-bold text-slate-900">Tajuk</div>
+          </div>
+        </div>
+
+        <div>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Penerangan Terperinci Aduan</span>
+          <div id="modal-details" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 leading-relaxed font-normal">Penerangan</div>
+        </div>
+
+        <div id="modal-attachment-wrapper" class="hidden">
+          <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Gambar Bukti Kerosakan</span>
+          <a id="modal-attachment-link" href="#" target="_blank" rel="noopener noreferrer" class="inline-block">
+            <img id="modal-attachment-image" alt="Gambar bukti kerosakan" class="max-h-64 rounded-xl border border-slate-300 object-contain bg-slate-50">
+          </a>
+        </div>
+
+        <div class="pt-4 border-t border-slate-200 space-y-4">
+          <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-blue-600"></span><span>Tugaskan Juruteknik Berdaftar & Kemaskini Status</span>
+          </span>
+
+          <form id="modalStatusForm" onsubmit="saveTicketChanges(event)" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Status Tiket</label>
+                <select id="modal-status-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <option value="Belum Diagihkan">Belum Diagihkan</option>
+                  <option value="Dalam Proses">Dalam Proses</option>
+                  <option value="Selesai">Selesai</option>
+                  <option value="Ditolak">Ditolak</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Agih ke Unit</label>
+                <select id="modal-unit-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <option value="Unit UPP">Unit UPP</option>
+                  <option value="Unit ICT">Unit ICT</option>
+                  <option value="Unit PIPD">Unit PIPD</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Pilih Juruteknik Bertugas *</label>
+                <select id="modal-assigned-tech-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-blue-900 focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                  <!-- Injected via JS -->
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Catatan Pentadbir / Arahan Kepada Juruteknik</label>
+              <textarea id="modal-remarks-input" rows="2" placeholder="Masukkan arahan tugasan..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" onclick="closeTicketModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition">Batal</button>
+              <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl shadow transition uppercase tracking-wider">Simpan & Agih Tugasan</button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TECH UPDATE MODAL -->
+  <div id="tech-update-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8">
+      
+      <div class="bg-emerald-900 text-white p-4 px-6 flex justify-between items-center border-b border-emerald-800">
+        <div>
+          <h3 class="text-sm font-bold text-white">Kemaskini Tugasan Kerja Juruteknik</h3>
+          <span id="tech-modal-ticket-id" class="text-xs text-emerald-200 font-mono">PN-001</span>
+        </div>
+        <button type="button" onclick="closeTechUpdateModal()" class="w-7 h-7 rounded-lg bg-emerald-800 hover:bg-red-600 text-white flex items-center justify-center text-xs font-mono transition">✕</button>
+      </div>
+
+      <form onsubmit="saveTechnicianJobUpdate(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <span class="text-[10px] uppercase font-bold text-slate-400 block">Tajuk Aduan</span>
+          <div id="tech-modal-subject" class="font-bold text-slate-900 text-sm mt-0.5">Kerosakan</div>
+          <div id="tech-modal-location" class="text-slate-600 mt-0.5">Lokasi: Makmal</div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Status Kemajuan Kerja *</label>
+          <select id="tech-modal-status-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+            <option value="Dalam Proses">Dalam Proses (Sedang Dibaiki)</option>
+            <option value="Selesai">Selesai (Penyelenggaraan Sempurna)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Catatan Tindakan Teknikal / Laporan Kerja *</label>
+          <textarea id="tech-modal-remarks-input" rows="3" required placeholder="Jelaskan komponen yang telah diganti atau status pembaikan..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeTechUpdateModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition">Batal</button>
+          <button type="submit" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow transition uppercase tracking-wider">Simpan Kemaskini Kerja</button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- TECHNICIAN CHANGE PASSWORD MODAL -->
+  <div id="tech-password-modal" class="hidden fixed inset-0 z-[60] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+      <div class="bg-emerald-900 text-white p-4 px-6 flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold">Tukar Kata Laluan Juruteknik</h3>
+          <p id="tech-password-modal-id" class="text-[11px] text-emerald-200 font-mono mt-0.5">TECH</p>
+        </div>
+        <button type="button" onclick="closeTechnicianPasswordModal()" class="w-7 h-7 rounded-lg bg-emerald-800 hover:bg-red-600 text-white flex items-center justify-center text-xs transition">✕</button>
+      </div>
+
+      <form id="technicianPasswordForm" onsubmit="handleTechnicianPasswordChange(event)" class="p-6 space-y-4 text-xs">
+        <div>
+          <label for="tech-current-password" class="block font-bold text-slate-700 mb-1">Kata Laluan Semasa</label>
+          <input type="password" id="tech-current-password" required autocomplete="current-password" placeholder="Masukkan kata laluan semasa" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+        </div>
+        <div>
+          <label for="tech-new-password" class="block font-bold text-slate-700 mb-1">Kata Laluan Baharu</label>
+          <input type="password" id="tech-new-password" required minlength="6" autocomplete="new-password" placeholder="Sekurang-kurangnya 6 aksara" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+        </div>
+        <div>
+          <label for="tech-confirm-password" class="block font-bold text-slate-700 mb-1">Sahkan Kata Laluan Baharu</label>
+          <input type="password" id="tech-confirm-password" required minlength="6" autocomplete="new-password" placeholder="Masukkan semula kata laluan baharu" class="w-full p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-600 focus:outline-none">
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeTechnicianPasswordModal()" class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl">Batal</button>
+          <button type="submit" class="px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-xl shadow">Simpan Kata Laluan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // SUPABASE CONNECTION
+    const SUPABASE_URL = 'https://sitoyvzlcxsgczozdsbw.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_V--VO32VOFvt2_fFNOCvGQ_PBm-MTL3';
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const MALAY_MONTHS = ['Januari', 'Februari', 'Mac', 'April', 'Mei', 'Jun', 'Julai', 'Ogos', 'September', 'Oktober', 'November', 'Disember'];
+    function formatMalayDate(isoString) {
+      if (!isoString) return '-';
+      const d = new Date(isoString);
+      return `${d.getDate()} ${MALAY_MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    function mapTechnicianRow(t) {
+      return { id: t.id, name: t.name, unit: t.unit, phone: t.phone, completedJobs: t.completed_jobs || 0, slaCompliance: t.sla_compliance || 100, passwordHash: t.password_hash || null };
+    }
+
+    async function hashPassword(password) {
+      const encoded = new TextEncoder().encode(password);
+      const digest = await crypto.subtle.digest('SHA-256', encoded);
+      return Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+    
+    function mapComplaintRow(c) {
+      return {
+        id: c.id, reporterName: c.reporter_name, reporterEmail: c.reporter_email || c.reporter_id || '-', role: c.role,
+        jabatan: c.jabatan, unit: c.unit, subject: c.subject, location: c.location,
+        urgency: c.urgency, status: c.status, details: c.details, date: formatMalayDate(c.created_at),
+        assignedTechId: c.assigned_tech_id, assignedTo: c.assigned_to, remarks: c.remarks,
+        attachmentUrl: c.attachment_url || null
+      };
+    }
+
+    let technicians = [];
+    let complaints = [];
+    let activeModalTicketId = null;
+    let activeLoggedInTechId = null; 
+    let activeTechJobUpdateTicketId = null;
+    let selectedLoginRole = 'Admin';
+    let isAdminAuthenticated = false;
+    const ADMIN_USER_ID = 'zakaria';
+    
+    // CHART INSTANCES
+    let chartTrendInstance = null;
+    let chartJabatanInstance = null;
+    let chartSlaInstance = null;
+    let chartStatusInstance = null;
+    let chartTechPerformanceInstance = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Admin mesti log masuk semula setiap kali halaman dibuka.
+      isAdminAuthenticated = false;
+      await refreshData();
+      switchMainTab('landing');
+    });
+
+    async function loadDataFromSupabase() {
+      const [techResult, complaintResult] = await Promise.all([
+        sb.from('technicians').select('*').order('name'),
+        sb.from('complaints').select('*').order('created_at', { ascending: false })
+      ]);
+
+      if (techResult.error) {
+        console.error('Gagal memuatkan juruteknik:', techResult.error);
+        technicians = [];
+      } else {
+        technicians = (techResult.data || []).map(mapTechnicianRow);
+      }
+
+      if (complaintResult.error) {
+        console.error('Gagal memuatkan aduan:', complaintResult.error);
+        complaints = [];
+        throw complaintResult.error;
+      } else {
+        complaints = (complaintResult.data || []).map(mapComplaintRow);
+      }
+    }
+
+    async function refreshData() {
+      try {
+        await loadDataFromSupabase();
+        populateTechSelectDropdowns();
+        return true;
+      } catch (error) {
+        console.error('Sambungan Supabase gagal:', error);
+        showCustomAlert('Data Supabase gagal dimuatkan. Sila semak sambungan dan polisi RLS.');
+        return false;
+      }
+    }
+
+    function showCustomAlert(msg) {
+        const isError = /ralat|gagal|tidak sah|tidak betul|tidak sepadan|maaf|tiada rekod|amaran/i.test(String(msg));
+        const icon = isError ? '✕' : '✓';
+        const iconClasses = isError
+          ? 'bg-red-100 text-red-600'
+          : 'bg-emerald-100 text-emerald-600';
+        const buttonClasses = isError
+          ? 'bg-red-600 hover:bg-red-700'
+          : 'bg-blue-600 hover:bg-blue-700';
+        const modal = document.createElement('div');
+        modal.className = 'fixed inset-0 z-[100] bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4';
+        modal.innerHTML = `
+            <div class="bg-white rounded-xl shadow-xl border border-slate-200 p-6 max-w-sm w-full text-center space-y-4">
+                <div class="w-12 h-12 ${iconClasses} rounded-full flex items-center justify-center mx-auto text-xl font-bold">${icon}</div>
+                <p class="custom-alert-message text-sm text-slate-800 font-semibold"></p>
+                <button class="px-5 py-2 ${buttonClasses} text-white rounded-lg font-bold w-full" onclick="this.parentElement.parentElement.remove()">Tutup</button>
+            </div>
+        `;
+        modal.querySelector('.custom-alert-message').textContent = String(msg);
+        document.body.appendChild(modal);
+    }
+
+    function populateTechSelectDropdowns() {
+      const loginTechSelect = document.getElementById('login-tech-dropdown');
+      const modalTechSelect = document.getElementById('modal-assigned-tech-select');
+      const techOptionsHTML = technicians.map(t => `<option value="${t.id}">${t.name} (${t.unit})</option>`).join('');
+
+      if (loginTechSelect) loginTechSelect.innerHTML = techOptionsHTML;
+      if (modalTechSelect) modalTechSelect.innerHTML = `<option value="">-- Belum Ditugaskan --</option>` + techOptionsHTML;
+
+      document.getElementById('count-tech-badge').textContent = technicians.length;
+      document.getElementById('hero-tech-count').textContent = `${technicians.length} Orang`;
+      document.getElementById('hero-total-count').textContent = complaints.length;
+    }
+
+    async function switchMainTab(tab) {
+      if (tab === 'dashboard' && !isAdminAuthenticated) {
+        showCustomAlert('Sila log masuk menggunakan ID dan kata laluan Admin terlebih dahulu.');
+        tab = 'login';
+        selectLoginRole('Admin');
+      }
+
+      const sections = ['landing', 'buat-aduan', 'semak-status', 'dashboard', 'login', 'tech-workspace'];
+      sections.forEach(s => {
+        const el = document.getElementById(`section-${s}`);
+        if (el) el.classList.add('hidden');
+      });
+
+      ['home', 'buat', 'semak', 'login'].forEach(key => {
+        const btn = document.getElementById(`tab-btn-${key}`);
+        if (btn) btn.className = 'px-3 py-1.5 rounded-md bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 transition flex items-center gap-1.5';
+      });
+
+      if (tab === 'landing') {
+        document.getElementById('section-landing').classList.remove('hidden');
+        document.getElementById('tab-btn-home').className = 'px-3 py-1.5 rounded-md bg-blue-600 text-white font-bold transition shadow flex items-center gap-1.5';
+      } else if (tab === 'buat-aduan') {
+        document.getElementById('section-buat-aduan').classList.remove('hidden');
+        document.getElementById('tab-btn-buat').className = 'px-3 py-1.5 rounded-md bg-blue-600 text-white font-bold transition shadow flex items-center gap-1.5';
+      } else if (tab === 'semak-status') {
+        document.getElementById('section-semak-status').classList.remove('hidden');
+        document.getElementById('tab-btn-semak').className = 'px-3 py-1.5 rounded-md bg-amber-600 text-white font-bold transition shadow flex items-center gap-1.5';
+      } else if (tab === 'dashboard') {
+        document.getElementById('section-dashboard').classList.remove('hidden');
+        await refreshData();
+        renderAdminTable();
+        renderAdminTechnicianTable();
+        setTimeout(() => initOrUpdateCharts(), 100);
+      } else if (tab === 'tech-workspace') {
+        document.getElementById('section-tech-workspace').classList.remove('hidden');
+        await refreshData();
+        renderTechnicianWorkspace();
+      } else if (tab === 'login') {
+        document.getElementById('section-login').classList.remove('hidden');
+        document.getElementById('tab-btn-login').className = 'px-3 py-1.5 rounded-md bg-slate-900 text-white font-bold border border-slate-700 transition shadow flex items-center gap-1.5';
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function switchAdminSubSection(sub) {
+      ['tickets', 'techs', 'analytics', 'password'].forEach(key => {
+        const sec = document.getElementById(`admin-section-${key}`);
+        const tab = document.getElementById(`admin-subtab-${key}`);
+        if (sec) sec.classList.add('hidden');
+        if (tab) tab.className = 'pb-3 px-4 border-b-2 border-transparent text-slate-500 hover:text-slate-800';
+      });
+
+      document.getElementById(`admin-section-${sub}`).classList.remove('hidden');
+      document.getElementById(`admin-subtab-${sub}`).className = 'pb-3 px-4 border-b-2 border-blue-600 text-blue-700 font-bold';
+
+      if (sub === 'analytics') setTimeout(() => initOrUpdateCharts(), 100);
+      if (sub === 'techs') renderAdminTechnicianTable();
+      if (sub === 'password') document.getElementById('changeAdminPasswordForm')?.reset();
+    }
+
+    function selectLoginRole(role) {
+      selectedLoginRole = role;
+      const btnAdmin = document.getElementById('login-role-admin');
+      const btnTech = document.getElementById('login-role-tech');
+      const useridInput = document.getElementById('login-userid');
+      const techSelectWrapper = document.getElementById('tech-select-wrapper');
+      const loginTitle = document.getElementById('login-title');
+      const loginSubtitle = document.getElementById('login-subtitle');
+      const submitBtn = document.getElementById('login-submit-btn');
+
+      if (role === 'Admin') {
+        btnAdmin.className = 'p-2.5 border-2 border-blue-600 bg-blue-50 text-blue-900 rounded-xl text-center font-bold';
+        btnTech.className = 'p-2.5 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl text-center hover:bg-slate-100';
+        useridInput.value = '';
+        useridInput.placeholder = 'Contoh: zakaria';
+        document.getElementById('login-id-label').textContent = 'ID Pengguna / Staf ID Pentadbir';
+        techSelectWrapper.classList.add('hidden');
+        loginTitle.textContent = 'Portal Log Masuk Pentadbir';
+        loginSubtitle.textContent = 'Akses Khas Admin UPP, HEP, & Pengurusan Kampus';
+        submitBtn.textContent = 'Log Masuk Pentadbir';
+      } else {
+        btnTech.className = 'p-2.5 border-2 border-emerald-600 bg-emerald-50 text-emerald-900 rounded-xl text-center font-bold';
+        btnAdmin.className = 'p-2.5 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl text-center hover:bg-slate-100';
+        techSelectWrapper.classList.remove('hidden');
+        syncTechDropdownToInput();
+        document.getElementById('login-id-label').textContent = 'Staf ID Juruteknik Bertugas';
+        loginTitle.textContent = 'Portal Log Masuk Juruteknik';
+        loginSubtitle.textContent = 'Ruang Kerja Juruteknik & Semakan Prestasi KPI';
+        submitBtn.textContent = 'Log Masuk Juruteknik';
+      }
+    }
+
+    function syncTechDropdownToInput() {
+      const dropdown = document.getElementById('login-tech-dropdown');
+      if (dropdown && dropdown.value) document.getElementById('login-userid').value = dropdown.value;
+    }
+
+    async function handleLoginSubmit(e) {
+      e.preventDefault();
+      const inputId = document.getElementById('login-userid').value.trim().toUpperCase();
+      const password = document.getElementById('login-password').value;
+      const submitButton = document.getElementById('login-submit-btn');
+
+      if (selectedLoginRole === 'Admin') {
+        submitButton.disabled = true;
+        submitButton.textContent = 'Sedang Mengesahkan...';
+
+        const { data: admin, error: adminError } = await sb
+          .from('admins')
+          .select('user_id, full_name, password_hash')
+          .eq('user_id', inputId.toLowerCase())
+          .maybeSingle();
+
+        const passwordHash = await hashPassword(password);
+        const isCorrectAdmin =
+          !adminError &&
+          admin?.user_id?.toLowerCase() === ADMIN_USER_ID.toLowerCase() &&
+          admin.password_hash === passwordHash;
+
+        submitButton.disabled = false;
+        submitButton.textContent = 'Log Masuk Pentadbir';
+
+        if (!isCorrectAdmin) {
+          if (adminError) console.error('Semakan admin Supabase gagal:', adminError);
+          showCustomAlert('ID pengguna atau kata laluan Admin tidak sah.');
+          document.getElementById('login-password').value = '';
+          return;
+        }
+
+        isAdminAuthenticated = true;
+        document.getElementById('login-password').value = '';
+        await switchMainTab('dashboard');
+      } else {
+        const found = technicians.find(t => t.id.toLowerCase() === inputId.toLowerCase());
+        const passwordHash = await hashPassword(password);
+        if (found && found.passwordHash && passwordHash === found.passwordHash) {
+          activeLoggedInTechId = found.id;
+          document.getElementById('login-password').value = '';
+          await switchMainTab('tech-workspace');
+        } else {
+          document.getElementById('login-password').value = '';
+          showCustomAlert('Ralat: ID atau kata laluan Juruteknik tidak sah.');
+        }
+      }
+    }
+
+    async function handleChangeAdminPassword(e) {
+      e.preventDefault();
+      const currentPassword = document.getElementById('admin-current-password').value;
+      const newPassword = document.getElementById('admin-new-password').value;
+      const confirmPassword = document.getElementById('admin-confirm-password').value;
+
+      const { data: admin, error: readError } = await sb
+        .from('admins')
+        .select('user_id, password_hash')
+        .eq('user_id', ADMIN_USER_ID)
+        .maybeSingle();
+
+      if (readError || !admin) {
+        showCustomAlert(`Ralat: Akaun admin gagal dibaca daripada Supabase. ${readError?.message || ''}`);
+        return;
+      }
+
+      const currentPasswordHash = await hashPassword(currentPassword);
+      if (currentPasswordHash !== admin.password_hash) {
+        showCustomAlert('Ralat: Kata laluan semasa tidak betul.');
+        document.getElementById('admin-current-password').value = '';
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showCustomAlert('Ralat: Kata laluan baharu mestilah sekurang-kurangnya 6 aksara.');
+        return;
+      }
+
+      if (newPassword !== confirmPassword) {
+        showCustomAlert('Ralat: Pengesahan kata laluan baharu tidak sepadan.');
+        return;
+      }
+
+      const newPasswordHash = await hashPassword(newPassword);
+      if (newPasswordHash === admin.password_hash) {
+        showCustomAlert('Ralat: Kata laluan baharu mestilah berbeza daripada kata laluan semasa.');
+        return;
+      }
+
+      const { error: updateError } = await sb
+        .from('admins')
+        .update({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
+        .eq('user_id', ADMIN_USER_ID);
+
+      if (updateError) {
+        showCustomAlert(`Ralat: Kata laluan admin gagal disimpan ke Supabase. ${updateError.message}`);
+        return;
+      }
+
+      document.getElementById('changeAdminPasswordForm').reset();
+      isAdminAuthenticated = false;
+      document.getElementById('login-userid').value = '';
+      document.getElementById('login-password').value = '';
+      selectLoginRole('Admin');
+      await switchMainTab('login');
+      showCustomAlert('Kata laluan berjaya ditukar. Sila log masuk semula menggunakan kata laluan baharu.');
+    }
+
+    async function logoutAdmin() {
+      isAdminAuthenticated = false;
+      document.getElementById('login-userid').value = '';
+      document.getElementById('login-password').value = '';
+      selectLoginRole('Admin');
+      await switchMainTab('login');
+      showCustomAlert('Admin telah berjaya log keluar.');
+    }
+
+    function updateRolePlaceholder(role) {
+      const label = document.getElementById('label-id-input');
+      const input = document.getElementById('form-email');
+      label.textContent = 'Alamat E-mel *';
+      input.placeholder = role === 'Pelajar' ? 'Contoh: pelajar@student.polinilai.edu.my' : 'Contoh: nama@email.com';
+    }
+
+    function previewEvidenceImage(event) {
+      const file = event.target.files[0];
+      const wrapper = document.getElementById('evidence-preview-wrapper');
+      const preview = document.getElementById('evidence-preview');
+      if (!file) { clearEvidenceImage(); return; }
+
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+        clearEvidenceImage();
+        showCustomAlert('Gambar mestilah jenis JPG, PNG atau WEBP dan tidak melebihi 5 MB.');
+        return;
+      }
+
+      preview.src = URL.createObjectURL(file);
+      wrapper.classList.remove('hidden');
+    }
+
+    function clearEvidenceImage() {
+      const input = document.getElementById('form-evidence-image');
+      const preview = document.getElementById('evidence-preview');
+      if (preview.src && preview.src.startsWith('blob:')) URL.revokeObjectURL(preview.src);
+      input.value = '';
+      preview.removeAttribute('src');
+      document.getElementById('evidence-preview-wrapper').classList.add('hidden');
+    }
+
+    async function uploadComplaintEvidence(ticketId, file) {
+      if (!file) return null;
+      const extension = file.name.split('.').pop().toLowerCase();
+      const uniqueId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).slice(2);
+      const safeFileName = `${Date.now()}-${uniqueId}.${extension}`;
+      const filePath = `${ticketId}/${safeFileName}`;
+      const { error } = await sb.storage.from('complaint-images').upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type
+      });
+      if (error) throw error;
+      return sb.storage.from('complaint-images').getPublicUrl(filePath).data.publicUrl;
+    }
+
+    async function getNextTicketId() {
+      const { data, error } = await sb.from('complaints').select('id').like('id', 'PN-%');
+      if (error) throw error;
+
+      const highestNumber = (data || []).reduce((highest, row) => {
+        const match = String(row.id || '').match(/^PN-(\d+)$/);
+        return match ? Math.max(highest, Number(match[1])) : highest;
+      }, 0);
+
+      return `PN-${String(highestNumber + 1).padStart(3, '0')}`;
+    }
+
+    async function handlePublicFormSubmit(event) {
+      event.preventDefault();
+      const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+      if (submitButton) submitButton.disabled = true;
+      const roles = document.getElementsByName('reporterRole');
+      let selectedRole = 'Pelajar';
+      for (let r of roles) { if (r.checked) selectedRole = r.value; }
+
+      let ticketId;
+      try {
+        ticketId = await getNextTicketId();
+      } catch (ticketError) {
+        console.error('Gagal menjana nombor tiket:', ticketError);
+        showCustomAlert('Nombor tiket gagal dijana. Sila cuba lagi.');
+        if (submitButton) submitButton.disabled = false;
+        return;
+      }
+
+      const evidenceFile = document.getElementById('form-evidence-image').files[0] || null;
+      let attachmentUrl = null;
+
+      try {
+        attachmentUrl = await uploadComplaintEvidence(ticketId, evidenceFile);
+      } catch (uploadError) {
+        console.error('Gagal memuat naik gambar:', uploadError);
+        showCustomAlert('Gambar gagal dimuat naik. Sila cuba semula atau buang gambar untuk menghantar aduan tanpa gambar.');
+        if (submitButton) submitButton.disabled = false;
+        return;
+      }
+
+      const newRow = {
+        id: ticketId,
+        reporter_name: document.getElementById('form-name').value.trim(),
+        reporter_email: document.getElementById('form-email').value.trim().toLowerCase(),
+        role: selectedRole,
+        jabatan: document.getElementById('form-jabatan').value,
+        unit: document.getElementById('form-unit').value,
+        subject: document.getElementById('form-subject').value,
+        location: document.getElementById('form-location').value,
+        urgency: document.getElementById('form-urgency').value,
+        status: 'Belum Diagihkan',
+        details: document.getElementById('form-details').value,
+        assigned_tech_id: null,
+        assigned_to: 'Belum Ditugaskan',
+        remarks: 'Aduan baharu diterima daripada portal.',
+        attachment_url: attachmentUrl
+      };
+
+      let { error } = await sb.from('complaints').insert(newRow);
+
+      // Keserasian untuk struktur database lama yang menggunakan reporter_id
+      // dan belum mempunyai kolum attachment_url.
+      if (error?.code === 'PGRST204') {
+        console.warn('Struktur Supabase lama dikesan. Menggunakan format serasi.', error.message);
+        const compatibleRow = { ...newRow, reporter_id: newRow.reporter_email };
+        delete compatibleRow.reporter_email;
+        delete compatibleRow.attachment_url;
+        ({ error } = await sb.from('complaints').insert(compatibleRow));
+      }
+
+      if (error) {
+        console.error('Aduan gagal disimpan:', error);
+        showCustomAlert(`Maaf, aduan gagal dihantar. Ralat database: ${error.message || 'Sila semak tetapan Supabase.'}`);
+        if (submitButton) submitButton.disabled = false;
+        return;
+      }
+
+      document.getElementById('form-subject').value = '';
+      document.getElementById('form-location').value = '';
+      document.getElementById('form-details').value = '';
+      clearEvidenceImage();
+
+      await refreshData();
+      switchMainTab('semak-status');
+      document.getElementById('lookup-ticket-input').value = newRow.id;
+      performTicketLookup();
+      showCustomAlert(`Aduan berjaya dihantar! Sila simpan Nombor Tiket anda: ${newRow.id}`);
+      if (submitButton) submitButton.disabled = false;
+    }
+
+    async function performTicketLookup() {
+      const rawInput = (document.getElementById('lookup-ticket-input').value || '').trim();
+      const container = document.getElementById('lookup-result-card');
+
+      if (!rawInput) {
+        container.innerHTML = `<div class="p-4 bg-amber-50 text-amber-900 rounded-xl text-xs font-semibold border border-amber-200">Sila masukkan Nombor Tiket Aduan anda.</div>`;
+        return;
+      }
+
+      const { data, error } = await sb.from('complaints').select('*').ilike('id', `%${rawInput}%`).limit(1).maybeSingle();
+
+      if (error || !data) {
+        container.innerHTML = `
+          <div class="p-5 bg-red-50 text-red-900 rounded-2xl text-xs border border-red-200 space-y-2">
+            <div class="font-bold text-sm">Rekod Aduan Tidak Dijumpai</div>
+            <p>Tiada rekod aduan berdaftar dengan ID "<strong>${rawInput}</strong>".</p>
+          </div>
+        `;
+        return;
+      }
+
+      const found = mapComplaintRow(data);
+      container.innerHTML = `
+        <div class="bg-white p-6 rounded-2xl border border-slate-300 shadow-sm space-y-4 text-xs">
+          <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <div><span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nombor Tiket</span><span class="font-mono font-black text-blue-900 text-base">${found.id}</span></div>
+            <div>${getStatusBadgeHtml(found.status)}</div>
+          </div>
+          <div class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Pelapor</span><strong class="text-slate-800">${found.reporterName} (${found.role})</strong></div>
+            <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Tarikh Dihantar</span><span class="text-slate-700 font-mono">${found.date}</span></div>
+            <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Jabatan</span><span class="text-slate-800 font-bold">${found.jabatan}</span></div>
+            <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Agihan Unit Bertindak</span><span class="text-blue-900 font-bold">${found.unit}</span></div>
+          </div>
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Tajuk Aduan</span><div class="font-bold text-slate-900 text-sm mt-0.5">${found.subject}</div><div class="text-slate-600 mt-1">Lokasi: <strong>${found.location}</strong></div></div>
+        </div>
+      `;
+    }
+
+    function toggleSelectAll(source) {
+      const checkboxes = document.querySelectorAll('.row-checkbox');
+      checkboxes.forEach(cb => cb.checked = source.checked);
+      updateSelectAllState();
+    }
+
+    function updateSelectAllState() {
+      const checkboxes = Array.from(document.querySelectorAll('.row-checkbox'));
+      const checkedCount = checkboxes.filter(cb => cb.checked).length;
+      const btnDelete = document.getElementById('btn-delete-selected');
+      const countSpan = document.getElementById('delete-selected-count');
+      const selectAllCb = document.getElementById('selectAllCheckbox');
+      
+      if (checkedCount > 0) {
+        btnDelete.classList.remove('hidden');
+        btnDelete.classList.add('inline-flex');
+        countSpan.textContent = checkedCount;
+        if(selectAllCb) selectAllCb.checked = (checkedCount === checkboxes.length);
+      } else {
+        btnDelete.classList.add('hidden');
+        btnDelete.classList.remove('inline-flex');
+        if(selectAllCb) selectAllCb.checked = false;
+      }
+    }
+
+    async function deleteSelectedComplaints() {
+      const checkboxes = Array.from(document.querySelectorAll('.row-checkbox:checked'));
+      const idsToDelete = checkboxes.map(cb => cb.value);
+
+      if (idsToDelete.length === 0) return;
+      if (!confirm(`Adakah anda pasti untuk memadam ${idsToDelete.length} aduan yang dipilih?`)) return;
+
+      const { data: deletedRows, error } = await sb.from('complaints').delete().in('id', idsToDelete).select('id');
+      
+      if (error) {
+        console.error(error);
+        showCustomAlert('Ralat: Gagal memadam aduan.');
+        return;
+      }
+
+      if (!deletedRows || deletedRows.length !== idsToDelete.length) {
+        showCustomAlert('Tiada rekod dipadam. Sila semak polisi DELETE (RLS) di Supabase.');
+        return;
+      }
+      
+      showCustomAlert(`${idsToDelete.length} rekod aduan berjaya dipadam.`);
+      
+      const selectAllCb = document.getElementById('selectAllCheckbox');
+      if(selectAllCb) selectAllCb.checked = false;
+      
+      updateSelectAllState();
+      await refreshData();
+      renderAdminTable();
+      initOrUpdateCharts();
+    }
+
+    async function deleteComplaint(id) {
+      if(!confirm(`Adakah anda pasti mahu memadam aduan ${id}?`)) return;
+      
+      const { data: deletedRows, error } = await sb.from('complaints').delete().eq('id', id).select('id');
+      if(error) {
+          console.error(error);
+          showCustomAlert("Ralat semasa memadam aduan.");
+          return;
+      }
+
+
+      if (!deletedRows || deletedRows.length === 0) {
+          showCustomAlert('Aduan tidak dipadam. Sila semak polisi DELETE (RLS) di Supabase.');
+          return;
+      }
+      
+      showCustomAlert(`Laporan aduan ${id} telah berjaya dipadam.`);
+      await refreshData();
+      renderAdminTable();
+      initOrUpdateCharts();
+    }
+
+    async function deleteAllComplaints() {
+      if (complaints.length === 0) {
+        showCustomAlert('Tiada rekod aduan untuk dipadam.');
+        return;
+      }
+      if(!confirm(`AMARAN: Ini akan mengosongkan SEMUA ${complaints.length} rekod aduan. Tindakan ini tidak boleh dibatalkan. Teruskan?`)) return;
+      
+      const { data: deletedRows, error } = await sb.from('complaints').delete().not('id', 'is', null).select('id');
+      
+      if (error) {
+        console.error(error);
+        showCustomAlert('Ralat: Gagal mengosongkan sistem.');
+        return;
+      }
+
+
+      if (!deletedRows || deletedRows.length === 0) {
+        showCustomAlert('Tiada rekod dipadam. Sila semak polisi DELETE (RLS) di Supabase.');
+        return;
+      }
+      
+      showCustomAlert(`${deletedRows.length} rekod aduan berjaya dipadam.`);
+      await refreshData();
+      renderAdminTable();
+      initOrUpdateCharts();
+    }
+
+    async function handleAddTechnician(e) {
+      e.preventDefault();
+      const name = document.getElementById('add-tech-name').value.trim();
+      const techId = document.getElementById('add-tech-id').value.trim().toUpperCase();
+      const unit = document.getElementById('add-tech-unit').value;
+      const phone = document.getElementById('add-tech-phone').value.trim() || '012-0000000';
+      const password = document.getElementById('add-tech-password').value;
+
+      if (technicians.some(t => t.id === techId)) { showCustomAlert(`ID Juruteknik ${techId} wujud!`); return; }
+      if (password.length < 6) { showCustomAlert('Kata laluan mesti sekurang-kurangnya 6 aksara.'); return; }
+
+      const passwordHash = await hashPassword(password);
+
+      const { error } = await sb.from('technicians').insert({
+        id: techId, name: name, unit: unit, phone: phone, completed_jobs: 0, sla_compliance: 100.0, password_hash: passwordHash
+      });
+
+      if (error) { showCustomAlert(`Pendaftaran gagal: ${error.message}`); return; }
+
+      document.getElementById('add-tech-name').value = '';
+      document.getElementById('add-tech-id').value = '';
+      document.getElementById('add-tech-phone').value = '';
+      document.getElementById('add-tech-password').value = 'tech123';
+
+      await refreshData();
+      renderAdminTechnicianTable();
+      showCustomAlert(`Juruteknik baharu "${name}" didaftarkan!`);
+    }
+
+    async function deleteTechnician(id) {
+      if(!confirm(`Padam juruteknik ${id}?`)) return;
+      const { error } = await sb.from('technicians').delete().eq('id', id);
+      if(error) { showCustomAlert('Gagal memadam juruteknik.'); return; }
+      
+      await refreshData();
+      renderAdminTechnicianTable();
+      showCustomAlert(`Juruteknik ${id} berjaya dipadam.`);
+    }
+
+    async function changeTechnicianPassword(id) {
+      const newPassword = prompt(`Masukkan kata laluan baharu untuk ${id}:`);
+      if (newPassword === null) return;
+      if (newPassword.length < 6) {
+        showCustomAlert('Kata laluan mestilah sekurang-kurangnya 6 aksara.');
+        return;
+      }
+
+      const passwordHash = await hashPassword(newPassword);
+      const { error } = await sb.from('technicians').update({ password_hash: passwordHash }).eq('id', id);
+      if (error) {
+        showCustomAlert(`Kata laluan gagal ditukar: ${error.message}`);
+        return;
+      }
+
+      await refreshData();
+      renderAdminTechnicianTable();
+      showCustomAlert(`Kata laluan ${id} berjaya ditukar.`);
+    }
+
+    function openTechnicianPasswordModal() {
+      if (!activeLoggedInTechId) {
+        showCustomAlert('Ralat: Sesi Juruteknik tidak sah. Sila log masuk semula.');
+        return;
+      }
+      document.getElementById('technicianPasswordForm').reset();
+      document.getElementById('tech-password-modal-id').textContent = activeLoggedInTechId;
+      document.getElementById('tech-password-modal').classList.remove('hidden');
+    }
+
+    function closeTechnicianPasswordModal() {
+      document.getElementById('tech-password-modal').classList.add('hidden');
+      document.getElementById('technicianPasswordForm').reset();
+    }
+
+    async function handleTechnicianPasswordChange(e) {
+      e.preventDefault();
+      const activeTech = technicians.find(t => t.id === activeLoggedInTechId);
+      const currentPassword = document.getElementById('tech-current-password').value;
+      const newPassword = document.getElementById('tech-new-password').value;
+      const confirmPassword = document.getElementById('tech-confirm-password').value;
+
+      if (!activeTech || !activeTech.passwordHash || await hashPassword(currentPassword) !== activeTech.passwordHash) {
+        showCustomAlert('Ralat: Kata laluan semasa tidak betul.');
+        document.getElementById('tech-current-password').value = '';
+        return;
+      }
+      if (newPassword.length < 6) {
+        showCustomAlert('Ralat: Kata laluan baharu mestilah sekurang-kurangnya 6 aksara.');
+        return;
+      }
+      if (newPassword !== confirmPassword) {
+        showCustomAlert('Ralat: Pengesahan kata laluan baharu tidak sepadan.');
+        return;
+      }
+      if (await hashPassword(newPassword) === activeTech.passwordHash) {
+        showCustomAlert('Ralat: Kata laluan baharu mestilah berbeza daripada kata laluan semasa.');
+        return;
+      }
+
+      const newPasswordHash = await hashPassword(newPassword);
+      const { error } = await sb.from('technicians').update({ password_hash: newPasswordHash }).eq('id', activeLoggedInTechId);
+      if (error) {
+        showCustomAlert(`Ralat: Kata laluan gagal disimpan ke Supabase. ${error.message}`);
+        return;
+      }
+
+      closeTechnicianPasswordModal();
+      await refreshData();
+      activeLoggedInTechId = null;
+      await switchMainTab('login');
+      selectLoginRole('Juruteknik');
+      showCustomAlert('Kata laluan berjaya ditukar. Sila log masuk semula menggunakan kata laluan baharu.');
+    }
+
+    async function logoutTechnician() {
+      activeLoggedInTechId = null;
+      document.getElementById('login-password').value = '';
+      await switchMainTab('login');
+      selectLoginRole('Juruteknik');
+    }
+
+    function renderAdminTechnicianTable() {
+      const tbody = document.getElementById('admin-technicians-tbody');
+      if (!tbody) return;
+
+      if (technicians.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada juruteknik berdaftar.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = technicians.map(t => {
+        const activeAssignedJobs = complaints.filter(c => c.assignedTechId === t.id && c.status !== 'Selesai').length;
+        const totalCompleted = complaints.filter(c => c.assignedTechId === t.id && c.status === 'Selesai').length + t.completedJobs;
+        return `
+          <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+            <td class="p-3 font-mono font-bold text-blue-900">${t.id}</td>
+            <td class="p-3 font-bold text-slate-800">${t.name}</td>
+            <td class="p-3"><span class="px-2 py-0.5 bg-blue-50 text-blue-800 rounded font-semibold text-[10px] border border-blue-200">${t.unit}</span></td>
+            <td class="p-3 font-mono text-slate-600">${t.phone}</td>
+            <td class="p-3 text-center"><span class="px-2.5 py-0.5 rounded-full font-bold text-xs ${activeAssignedJobs > 0 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'}">${activeAssignedJobs} Tugasan</span></td>
+            <td class="p-3 text-center flex justify-center gap-1.5">
+              <button type="button" onclick="changeTechnicianPassword('${t.id}')" class="px-2.5 py-1 bg-blue-700 hover:bg-blue-800 text-white font-semibold text-[10px] rounded-lg transition">Tukar Kata Laluan</button>
+              <button type="button" onclick="deleteTechnician('${t.id}')" class="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white font-semibold text-[10px] rounded-lg transition">Padam</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function renderAdminTable() {
+      const tbody = document.getElementById('admin-complaints-tbody');
+      if (!tbody) return;
+
+      const query = (document.getElementById('admin-search-input')?.value || '').toLowerCase();
+      const unitFilter = document.getElementById('admin-filter-unit')?.value || '';
+      const deptFilter = document.getElementById('admin-filter-jabatan')?.value || '';
+
+      let filtered = complaints.filter(c => {
+        const searchableValues = [c.id, c.reporterName, c.subject, c.status, c.assignedTo];
+        const matchesQuery = searchableValues.some(value => String(value || '').toLowerCase().includes(query));
+        const matchesUnit = unitFilter === '' || c.unit === unitFilter;
+        const matchesDept = deptFilter === '' || c.jabatan === deptFilter;
+        return matchesQuery && matchesUnit && matchesDept;
+      });
+
+      document.getElementById('kpi-card-total').textContent = complaints.length;
+      document.getElementById('kpi-card-resolved').textContent = complaints.filter(c => c.status === 'Selesai').length;
+      document.getElementById('kpi-card-pending').textContent = complaints.filter(c => c.status === 'Dalam Proses').length;
+      document.getElementById('kpi-card-urgent').textContent = complaints.filter(c => c.status === 'Belum Diagihkan' || c.urgency === 'Tinggi').length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400">Tiada rekod aduan yang padan.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(c => `
+        <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+          <td class="p-3 text-center"><input type="checkbox" value="${c.id}" class="row-checkbox w-4 h-4 cursor-pointer accent-blue-600" onchange="updateSelectAllState()"></td>
+          <td class="p-3 font-mono font-bold text-blue-900">${c.id}</td>
+          <td class="p-3"><div class="font-bold text-slate-800">${c.reporterName}</div><div class="text-[10px] text-slate-500">${c.reporterEmail} (${c.role})</div></td>
+          <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px] border border-slate-200">${c.jabatan}</span></td>
+          <td class="p-3 max-w-xs"><div class="font-bold text-slate-800 truncate">${c.subject}</div><div class="text-[10px] text-blue-700 font-medium">${c.unit}</div></td>
+          <td class="p-3">${c.assignedTechId ? `<span class="font-bold text-slate-900 block">${c.assignedTo}</span><span class="text-[10px] font-mono text-emerald-700">${c.assignedTechId}</span>` : `<span class="text-red-600 font-semibold italic text-[11px]">Belum Diagih</span>`}</td>
+          <td class="p-3">${getUrgencyBadgeHtml(c.urgency)}</td>
+          <td class="p-3">${getStatusBadgeHtml(c.status)}</td>
+          <td class="p-3 text-center flex justify-center gap-1 flex-wrap items-center">
+            <button type="button" onclick="openTicketModal('${c.id}')" class="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-semibold text-[10px] rounded shadow-sm transition">Agih / Urus</button>
+            <button type="button" onclick="deleteComplaint('${c.id}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-semibold text-[10px] rounded shadow-sm transition">Padam</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function renderTechnicianWorkspace(statusFilter = 'Semua') {
+      const activeTech = technicians.find(t => t.id === activeLoggedInTechId);
+      if(!activeTech) return; 
+
+      document.getElementById('tech-profile-name').textContent = activeTech.name;
+      document.getElementById('tech-profile-id').textContent = activeTech.id;
+      document.getElementById('tech-profile-unit').textContent = activeTech.unit;
+      
+      const avatarStr = activeTech.name.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase();
+      document.getElementById('tech-profile-avatar').textContent = avatarStr || 'JT';
+
+      let myJobs = complaints.filter(c => c.assignedTechId === activeTech.id);
+
+      myJobs.sort((a, b) => {
+        if (a.status === 'Dalam Proses' && b.status !== 'Dalam Proses') return -1;
+        if (b.status === 'Dalam Proses' && a.status !== 'Dalam Proses') return 1;
+        return b.id.localeCompare(a.id);
+      });
+
+      const myCompleted = myJobs.filter(c => c.status === 'Selesai').length;
+      const myInProgress = myJobs.filter(c => c.status === 'Dalam Proses').length;
+
+      document.getElementById('tech-card-assigned').textContent = myJobs.length;
+      document.getElementById('tech-card-completed').textContent = myCompleted;
+      document.getElementById('tech-card-in-progress').textContent = myInProgress;
+
+      const tbody = document.getElementById('tech-jobs-tbody');
+      let displayJobs = myJobs;
+      if (statusFilter !== 'Semua') { displayJobs = myJobs.filter(c => c.status === statusFilter); }
+
+      if (displayJobs.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Tiada tugasan aduan diagihkan kepada anda buat masa ini.</td></tr>`;
+      } else {
+        tbody.innerHTML = displayJobs.map(c => {
+          const isNew = c.status === 'Dalam Proses';
+          return `
+          <tr class="transition ${isNew ? 'bg-amber-50/40 hover:bg-amber-50/70' : 'hover:bg-slate-50'} border-b border-slate-100">
+            <td class="p-3"><span class="font-mono font-bold text-blue-900">${c.id}</span></td>
+            <td class="p-3"><div class="font-bold text-slate-800">${c.reporterName}</div><div class="text-[10px] text-slate-500 font-mono">${c.jabatan} (${c.role})</div></td>
+            <td class="p-3"><div class="font-bold text-slate-900">${c.subject}</div><div class="text-[10px] text-slate-500">Lokasi: ${c.location}</div></td>
+            <td class="p-3">${c.date}</td>
+            <td class="p-3">${getUrgencyBadgeHtml(c.urgency)}</td>
+            <td class="p-3">${getStatusBadgeHtml(c.status)}</td>
+            <td class="p-3 text-center">
+              <button type="button" onclick="openTechUpdateModal('${c.id}')" class="px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-[11px] rounded-lg shadow transition mx-auto">Kemaskini Status</button>
+            </td>
+          </tr>
+        `}).join('');
+      }
+
+      initTechPerformanceChart(myJobs.length, myCompleted, myInProgress);
+    }
+
+    function filterTechJobs(status) { renderTechnicianWorkspace(status); }
+
+    function openTechUpdateModal(ticketId) {
+      activeTechJobUpdateTicketId = ticketId;
+      const ticket = complaints.find(c => c.id === ticketId);
+      if (!ticket) return;
+      document.getElementById('tech-modal-ticket-id').textContent = ticket.id;
+      document.getElementById('tech-modal-subject').textContent = ticket.subject;
+      document.getElementById('tech-modal-location').textContent = `Lokasi: ${ticket.location}`;
+      document.getElementById('tech-modal-status-select').value = ticket.status === 'Belum Diagihkan' ? 'Dalam Proses' : ticket.status;
+      document.getElementById('tech-modal-remarks-input').value = ticket.remarks || '';
+      document.getElementById('tech-update-modal').classList.remove('hidden');
+    }
+
+    function closeTechUpdateModal() { document.getElementById('tech-update-modal').classList.add('hidden'); activeTechJobUpdateTicketId = null; }
+
+    async function saveTechnicianJobUpdate(e) {
+      e.preventDefault();
+      if (!activeTechJobUpdateTicketId) return;
+
+      const newStatus = document.getElementById('tech-modal-status-select').value;
+      const newRemarks = document.getElementById('tech-modal-remarks-input').value;
+
+      const { error } = await sb.from('complaints').update({ status: newStatus, remarks: newRemarks }).eq('id', activeTechJobUpdateTicketId);
+
+      if (error) { showCustomAlert('Maaf, kemaskini kerja gagal disimpan.'); return; }
+
+      closeTechUpdateModal();
+      await refreshData();
+      showCustomAlert(`Kemaskini laporan kerja berjaya disimpan!`);
+    }
+
+    function openTicketModal(ticketId) {
+      activeModalTicketId = ticketId;
+      const ticket = complaints.find(c => c.id === ticketId);
+      if (!ticket) return;
+
+      document.getElementById('modal-ticket-id').textContent = ticket.id;
+      document.getElementById('modal-ticket-date').textContent = `Tarikh: ${ticket.date}`;
+      document.getElementById('modal-reporter-name').textContent = ticket.reporterName;
+      document.getElementById('modal-reporter-id').textContent = `${ticket.reporterEmail} (${ticket.role})`;
+      document.getElementById('modal-reporter-dept').textContent = ticket.jabatan;
+      
+      const urgBadge = document.getElementById('modal-urgency-badge');
+      urgBadge.textContent = ticket.urgency;
+      urgBadge.className = ticket.urgency === 'Tinggi' ? 'px-2 py-0.5 rounded font-bold text-[10px] bg-red-100 text-red-800' : 'px-2 py-0.5 rounded font-bold text-[10px] bg-amber-100 text-amber-800';
+
+      document.getElementById('modal-unit').textContent = ticket.unit;
+      document.getElementById('modal-location').textContent = ticket.location;
+      document.getElementById('modal-subject').textContent = ticket.subject;
+      document.getElementById('modal-details').textContent = ticket.details;
+
+      const attachmentWrapper = document.getElementById('modal-attachment-wrapper');
+      if (ticket.attachmentUrl) {
+        document.getElementById('modal-attachment-link').href = ticket.attachmentUrl;
+        document.getElementById('modal-attachment-image').src = ticket.attachmentUrl;
+        attachmentWrapper.classList.remove('hidden');
+      } else {
+        document.getElementById('modal-attachment-link').href = '#';
+        document.getElementById('modal-attachment-image').removeAttribute('src');
+        attachmentWrapper.classList.add('hidden');
+      }
+
+      document.getElementById('modal-status-select').value = ticket.status;
+      document.getElementById('modal-unit-select').value = ticket.unit;
+      document.getElementById('modal-assigned-tech-select').value = ticket.assignedTechId || '';
+      document.getElementById('modal-remarks-input').value = ticket.remarks || '';
+
+      document.getElementById('ticket-modal').classList.remove('hidden');
+    }
+
+    function closeTicketModal() { document.getElementById('ticket-modal').classList.add('hidden'); activeModalTicketId = null; }
+
+    async function saveTicketChanges(event) {
+      event.preventDefault();
+      if (!activeModalTicketId) return;
+
+      let newStatus = document.getElementById('modal-status-select').value;
+      const newUnit = document.getElementById('modal-unit-select').value;
+      const selectedTechId = document.getElementById('modal-assigned-tech-select').value || null;
+      const newRemarks = document.getElementById('modal-remarks-input').value;
+
+      let newAssignedTo = 'Belum Ditugaskan';
+      if (selectedTechId) {
+        const techObj = technicians.find(t => t.id === selectedTechId);
+        newAssignedTo = techObj ? techObj.name : 'Juruteknik Bertugas';
+        if (newStatus === 'Belum Diagihkan') newStatus = 'Dalam Proses';
+      }
+
+      const { error } = await sb.from('complaints').update({
+        status: newStatus, unit: newUnit, assigned_tech_id: selectedTechId, assigned_to: newAssignedTo, remarks: newRemarks
+      }).eq('id', activeModalTicketId);
+
+      if (error) { showCustomAlert('Maaf, kemaskini tiket gagal.'); return; }
+
+      closeTicketModal();
+      await refreshData();
+      renderAdminTable();
+      initOrUpdateCharts();
+      showCustomAlert(`Aduan berjaya dikemaskini dan diagihkan.`);
+    }
+
+    function getStatusBadgeHtml(status) {
+      if (status === 'Selesai') return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold rounded-full text-[10px]"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>Selesai</span>`;
+      else if (status === 'Dalam Proses') return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 font-semibold rounded-full text-[10px]"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Dalam Proses</span>`;
+      else if (status === 'Ditolak') return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-rose-50 text-rose-800 border border-rose-200 font-semibold rounded-full text-[10px]"><span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>Ditolak</span>`;
+      return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-blue-50 text-blue-800 border border-blue-200 font-semibold rounded-full text-[10px]"><span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>Belum Diagihkan</span>`;
+    }
+
+    function getUrgencyBadgeHtml(urgency) {
+      if (urgency === 'Tinggi') return `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-700 border border-red-200 font-bold rounded text-[10px] uppercase"><span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>Tinggi</span>`;
+      else if (urgency === 'Sederhana') return `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 font-bold rounded text-[10px] uppercase"><span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>Sederhana</span>`;
+      return `<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 border border-slate-200 font-semibold rounded text-[10px] uppercase"><span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>Biasa</span>`;
+    }
+
+    function initOrUpdateCharts() {
+      // 1. Trend Volume Bulanan
+      const ctxTrend = document.getElementById('chartTrend').getContext('2d');
+      if (chartTrendInstance) chartTrendInstance.destroy();
+      
+      const monthlyCounts = [0, 0, 0, 0, 0, 0];
+      complaints.forEach(c => {
+         if(c.date.includes('Mei')) monthlyCounts[0]++;
+         if(c.date.includes('Jun')) monthlyCounts[1]++;
+         if(c.date.includes('Julai')) monthlyCounts[2]++;
+         if(c.date.includes('Ogos')) monthlyCounts[3]++;
+         if(c.date.includes('September')) monthlyCounts[4]++;
+         if(c.date.includes('Oktober')) monthlyCounts[5]++;
+      });
+
+      chartTrendInstance = new Chart(ctxTrend, {
+        type: 'line',
+        data: {
+          labels: ['Mei', 'Jun', 'Julai', 'Ogos', 'Sept', 'Okt'],
+          datasets: [{
+            label: 'Jumlah Aduan',
+            data: monthlyCounts,
+            borderColor: '#0284c7',
+            backgroundColor: 'rgba(2, 132, 199, 0.08)',
+            fill: true,
+            tension: 0.3,
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+
+      // 2. Agihan Mengikut Jabatan
+      const deptCounts = { JTMK: 0, JKE: 0, JKAU: 0, JPA: 0, UPP: 0 };
+      complaints.forEach(c => {
+        if (deptCounts[c.jabatan] !== undefined) deptCounts[c.jabatan]++;
+      });
+
+      const ctxDept = document.getElementById('chartJabatan').getContext('2d');
+      if (chartJabatanInstance) chartJabatanInstance.destroy();
+      chartJabatanInstance = new Chart(ctxDept, {
+        type: 'doughnut',
+        data: {
+          labels: ['JTMK', 'JKE', 'JKAU', 'JPA', 'UPP'],
+          datasets: [{
+            data: [deptCounts.JTMK, deptCounts.JKE, deptCounts.JKAU, deptCounts.JPA, deptCounts.UPP],
+            backgroundColor: ['#1e40af', '#d97706', '#059669', '#64748b', '#8b5cf6']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+        }
+      });
+
+      // 3. Purata Masa Penyelesaian SLA (Jam)
+      const ctxSla = document.getElementById('chartSla').getContext('2d');
+      if (chartSlaInstance) chartSlaInstance.destroy();
+      chartSlaInstance = new Chart(ctxSla, {
+        type: 'bar',
+        data: {
+          labels: ['Unit UPP', 'Unit ICT', 'Unit PIPD'],
+          datasets: [{
+            label: 'Purata Masa (Jam)',
+            data: [0, 0, 0], // Dinamik jika diperlukan, buat sementara waktu diset kepada 0 untuk mula baharu
+            backgroundColor: '#059669',
+            borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true } }
+        }
+      });
+
+      // 4. Status Tindakan Semasa
+      const statusCounts = { 'Belum Diagihkan': 0, 'Dalam Proses': 0, Selesai: 0, Ditolak: 0 };
+      complaints.forEach(c => {
+        if (statusCounts[c.status] !== undefined) statusCounts[c.status]++;
+      });
+
+      const ctxStatus = document.getElementById('chartStatus').getContext('2d');
+      if (chartStatusInstance) chartStatusInstance.destroy();
+      chartStatusInstance = new Chart(ctxStatus, {
+        type: 'pie',
+        data: {
+          labels: ['Belum Diagihkan', 'Dalam Proses', 'Selesai', 'Ditolak'],
+          datasets: [{
+            data: [statusCounts['Belum Diagihkan'], statusCounts['Dalam Proses'], statusCounts.Selesai, statusCounts.Ditolak],
+            backgroundColor: ['#2563eb', '#f59e0b', '#10b981', '#f43f5e']
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+        }
+      });
+    }
+
+    function initTechPerformanceChart(assignedCount, completedCount, inProgressCount) {
+      const ctx = document.getElementById('chartTechPerformance').getContext('2d');
+      if (chartTechPerformanceInstance) chartTechPerformanceInstance.destroy();
+
+      chartTechPerformanceInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['Tugasan Diagihkan', 'Sedang Dikerjakan', 'Selesai Sempurna'],
+          datasets: [{
+            label: 'Bilangan Kes Aduan',
+            data: [assignedCount, inProgressCount, completedCount],
+            backgroundColor: ['#3b82f6', '#f59e0b', '#10b981'],
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+  </script>
+</body>
+</html>
