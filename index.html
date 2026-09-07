@@ -512,16 +512,16 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 border-l-4 border-l-emerald-600">
           <div>
             <div class="flex items-center gap-2">
-              <h2 class="text-base font-bold text-slate-900 tracking-tight">Papan Pemuka Pentadbir — Encik Zakaria Abdullah</h2>
+              <h2 class="text-base font-bold text-slate-900 tracking-tight">Papan Pemuka Pentadbir — <span id="admin-display-name">Admin Unit</span></h2>
               <span class="bg-emerald-50 text-emerald-800 text-[10px] font-semibold px-2 py-0.5 rounded border border-emerald-200">Akses Admin Sulit</span>
             </div>
             <p class="text-xs text-slate-600 mt-1">
-              Pusat kawalan Pentadbir untuk agih tugasan, mengurus senarai juruteknik, dan memantau prestasi KPI.
+              Pusat kawalan <strong id="admin-display-unit">Unit</strong> untuk agih tugasan, mengurus juruteknik unit dan memantau prestasi KPI.
             </p>
           </div>
           <div class="flex flex-wrap items-center gap-2 text-xs">
             <button type="button" onclick="deleteAllComplaints()" class="px-3.5 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow transition flex items-center gap-1.5">
-              <span>🗑️ Kosongkan & Format Sistem</span>
+              <span>🗑️ Kosongkan Aduan Unit</span>
             </button>
             <button type="button" onclick="logoutAdmin()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg border border-slate-300 transition shadow-sm">
               Log Keluar Admin
@@ -599,7 +599,7 @@
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-slate-100">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  <span>Senarai Penuh Laporan Aduan Kampus</span>
+                  <span>Senarai Laporan Aduan <span id="admin-list-unit">Unit</span></span>
                   <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px]">Akses Pentadbir</span>
                 </h3>
                 <p class="text-xs text-slate-500 mt-0.5">
@@ -628,11 +628,6 @@
 
               <select id="admin-filter-jabatan" onchange="renderAdminTable()" class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none font-semibold">
                 <option value="">Semua Jabatan</option>
-                <option value="JTMK">JTMK</option>
-                <option value="JKE">JKE</option>
-                <option value="JKAU">JKAU</option>
-                <option value="JPA">JPA</option>
-                <option value="UPP">UPP</option>
               </select>
             </div>
 
@@ -1202,7 +1197,38 @@
     let activeTechJobUpdateTicketId = null;
     let selectedLoginRole = 'Admin';
     let isAdminAuthenticated = false;
-    const ADMIN_USER_ID = 'zakaria';
+    let activeAdmin = null;
+
+    function getAdminComplaints() {
+      return activeAdmin?.unit ? complaints.filter(c => c.unit === activeAdmin.unit) : [];
+    }
+
+    function getAdminTechnicians() {
+      return activeAdmin?.unit ? technicians.filter(t => t.unit === activeAdmin.unit) : [];
+    }
+
+    function updateAdminScopeUI() {
+      if (!activeAdmin) return;
+      document.getElementById('admin-display-name').textContent = activeAdmin.fullName;
+      document.getElementById('admin-display-unit').textContent = activeAdmin.unit;
+      document.getElementById('admin-list-unit').textContent = activeAdmin.unit;
+
+      const unitFilter = document.getElementById('admin-filter-unit');
+      unitFilter.value = activeAdmin.unit;
+      unitFilter.disabled = true;
+
+      const addTechUnit = document.getElementById('add-tech-unit');
+      addTechUnit.value = activeAdmin.unit;
+      addTechUnit.disabled = true;
+
+      const assignUnit = document.getElementById('modal-unit-select');
+      assignUnit.value = activeAdmin.unit;
+      assignUnit.disabled = true;
+
+      const deptFilter = document.getElementById('admin-filter-jabatan');
+      const departments = [...new Set(getAdminComplaints().map(c => c.jabatan).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ms'));
+      deptFilter.innerHTML = '<option value="">Semua Jabatan Pelapor</option>' + departments.map(name => `<option value="${name}">${name}</option>`).join('');
+    }
     
     // CHART INSTANCES
     let chartTrendInstance = null;
@@ -1214,6 +1240,7 @@
     document.addEventListener('DOMContentLoaded', async () => {
       // Admin mesti log masuk semula setiap kali halaman dibuka.
       isAdminAuthenticated = false;
+      activeAdmin = null;
       await refreshData();
       switchMainTab('landing');
     });
@@ -1278,11 +1305,12 @@
       const loginTechSelect = document.getElementById('login-tech-dropdown');
       const modalTechSelect = document.getElementById('modal-assigned-tech-select');
       const techOptionsHTML = technicians.map(t => `<option value="${t.id}">${t.name} (${t.unit})</option>`).join('');
+      const adminTechOptionsHTML = getAdminTechnicians().map(t => `<option value="${t.id}">${t.name} (${t.unit})</option>`).join('');
 
       if (loginTechSelect) loginTechSelect.innerHTML = techOptionsHTML;
-      if (modalTechSelect) modalTechSelect.innerHTML = `<option value="">-- Belum Ditugaskan --</option>` + techOptionsHTML;
+      if (modalTechSelect) modalTechSelect.innerHTML = `<option value="">-- Belum Ditugaskan --</option>` + adminTechOptionsHTML;
 
-      document.getElementById('count-tech-badge').textContent = technicians.length;
+      document.getElementById('count-tech-badge').textContent = activeAdmin ? getAdminTechnicians().length : technicians.length;
       document.getElementById('hero-tech-count').textContent = `${technicians.length} Orang`;
       document.getElementById('hero-total-count').textContent = complaints.length;
     }
@@ -1317,6 +1345,7 @@
       } else if (tab === 'dashboard') {
         document.getElementById('section-dashboard').classList.remove('hidden');
         await refreshData();
+        updateAdminScopeUI();
         renderAdminTable();
         renderAdminTechnicianTable();
         setTimeout(() => initOrUpdateCharts(), 100);
@@ -1361,11 +1390,11 @@
         btnAdmin.className = 'p-2.5 border-2 border-blue-600 bg-blue-50 text-blue-900 rounded-xl text-center font-bold';
         btnTech.className = 'p-2.5 border border-slate-200 bg-slate-50 text-slate-600 rounded-xl text-center hover:bg-slate-100';
         useridInput.value = '';
-        useridInput.placeholder = 'Contoh: zakaria';
+        useridInput.placeholder = 'Contoh: ADMIN-ICT';
         document.getElementById('login-id-label').textContent = 'ID Pengguna / Staf ID Pentadbir';
         techSelectWrapper.classList.add('hidden');
         loginTitle.textContent = 'Portal Log Masuk Pentadbir';
-        loginSubtitle.textContent = 'Akses Khas Admin UPP, HEP, & Pengurusan Kampus';
+        loginSubtitle.textContent = 'Akses Khas Admin Unit UPP, ICT dan PIPD';
         submitBtn.textContent = 'Log Masuk Pentadbir';
       } else {
         btnTech.className = 'p-2.5 border-2 border-emerald-600 bg-emerald-50 text-emerald-900 rounded-xl text-center font-bold';
@@ -1396,14 +1425,15 @@
 
         const { data: admin, error: adminError } = await sb
           .from('admins')
-          .select('user_id, full_name, password_hash')
+          .select('user_id, full_name, unit, password_hash')
           .eq('user_id', inputId.toLowerCase())
           .maybeSingle();
 
         const passwordHash = await hashPassword(password);
         const isCorrectAdmin =
           !adminError &&
-          admin?.user_id?.toLowerCase() === ADMIN_USER_ID.toLowerCase() &&
+          admin?.user_id?.toLowerCase() === inputId.toLowerCase() &&
+          ['Unit UPP', 'Unit ICT', 'Unit PIPD'].includes(admin?.unit) &&
           admin.password_hash === passwordHash;
 
         submitButton.disabled = false;
@@ -1417,6 +1447,7 @@
         }
 
         isAdminAuthenticated = true;
+        activeAdmin = { userId: admin.user_id, fullName: admin.full_name, unit: admin.unit };
         document.getElementById('login-password').value = '';
         await switchMainTab('dashboard');
       } else {
@@ -1442,7 +1473,7 @@
       const { data: admin, error: readError } = await sb
         .from('admins')
         .select('user_id, password_hash')
-        .eq('user_id', ADMIN_USER_ID)
+        .eq('user_id', activeAdmin?.userId || '')
         .maybeSingle();
 
       if (readError || !admin) {
@@ -1476,7 +1507,7 @@
       const { error: updateError } = await sb
         .from('admins')
         .update({ password_hash: newPasswordHash, updated_at: new Date().toISOString() })
-        .eq('user_id', ADMIN_USER_ID);
+        .eq('user_id', activeAdmin?.userId || '');
 
       if (updateError) {
         showCustomAlert(`Ralat: Kata laluan admin gagal disimpan ke Supabase. ${updateError.message}`);
@@ -1485,6 +1516,7 @@
 
       document.getElementById('changeAdminPasswordForm').reset();
       isAdminAuthenticated = false;
+      activeAdmin = null;
       document.getElementById('login-userid').value = '';
       document.getElementById('login-password').value = '';
       selectLoginRole('Admin');
@@ -1494,6 +1526,7 @@
 
     async function logoutAdmin() {
       isAdminAuthenticated = false;
+      activeAdmin = null;
       document.getElementById('login-userid').value = '';
       document.getElementById('login-password').value = '';
       selectLoginRole('Admin');
@@ -1798,6 +1831,11 @@
     }
 
     async function deleteComplaint(id) {
+      const targetComplaint = complaints.find(c => c.id === id);
+      if (!targetComplaint || targetComplaint.unit !== activeAdmin?.unit) {
+        showCustomAlert('Anda hanya boleh memadam aduan unit sendiri.');
+        return;
+      }
       if(!confirm(`Adakah anda pasti mahu memadam aduan ${id}?`)) return;
       
       const { data: deletedRows, error } = await sb.from('complaints').delete().eq('id', id).select('id');
@@ -1820,13 +1858,14 @@
     }
 
     async function deleteAllComplaints() {
-      if (complaints.length === 0) {
+      const unitComplaints = getAdminComplaints();
+      if (unitComplaints.length === 0) {
         showCustomAlert('Tiada rekod aduan untuk dipadam.');
         return;
       }
-      if(!confirm(`AMARAN: Ini akan mengosongkan SEMUA ${complaints.length} rekod aduan. Tindakan ini tidak boleh dibatalkan. Teruskan?`)) return;
+      if(!confirm(`AMARAN: Ini akan memadam semua ${unitComplaints.length} aduan ${activeAdmin.unit}. Tindakan ini tidak boleh dibatalkan. Teruskan?`)) return;
       
-      const { data: deletedRows, error } = await sb.from('complaints').delete().not('id', 'is', null).select('id');
+      const { data: deletedRows, error } = await sb.from('complaints').delete().eq('unit', activeAdmin.unit).select('id');
       
       if (error) {
         console.error(error);
@@ -1850,7 +1889,7 @@
       e.preventDefault();
       const name = document.getElementById('add-tech-name').value.trim();
       const techId = document.getElementById('add-tech-id').value.trim().toUpperCase();
-      const unit = document.getElementById('add-tech-unit').value;
+      const unit = activeAdmin?.unit;
       const phone = document.getElementById('add-tech-phone').value.trim() || '012-0000000';
       const password = document.getElementById('add-tech-password').value;
 
@@ -1876,6 +1915,11 @@
     }
 
     async function deleteTechnician(id) {
+      const targetTech = technicians.find(t => t.id === id);
+      if (!targetTech || targetTech.unit !== activeAdmin?.unit) {
+        showCustomAlert('Anda hanya boleh mengurus juruteknik unit sendiri.');
+        return;
+      }
       if(!confirm(`Padam juruteknik ${id}?`)) return;
       const { error } = await sb.from('technicians').delete().eq('id', id);
       if(error) { showCustomAlert('Gagal memadam juruteknik.'); return; }
@@ -1886,6 +1930,11 @@
     }
 
     async function changeTechnicianPassword(id) {
+      const targetTech = technicians.find(t => t.id === id);
+      if (!targetTech || targetTech.unit !== activeAdmin?.unit) {
+        showCustomAlert('Anda hanya boleh mengurus juruteknik unit sendiri.');
+        return;
+      }
       const newPassword = prompt(`Masukkan kata laluan baharu untuk ${id}:`);
       if (newPassword === null) return;
       if (newPassword.length < 6) {
@@ -1970,13 +2019,14 @@
     function renderAdminTechnicianTable() {
       const tbody = document.getElementById('admin-technicians-tbody');
       if (!tbody) return;
+      const unitTechnicians = getAdminTechnicians();
 
-      if (technicians.length === 0) {
+      if (unitTechnicians.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-400">Belum ada juruteknik berdaftar.</td></tr>`;
         return;
       }
 
-      tbody.innerHTML = technicians.map(t => {
+      tbody.innerHTML = unitTechnicians.map(t => {
         const activeAssignedJobs = complaints.filter(c => c.assignedTechId === t.id && c.status !== 'Selesai').length;
         const totalCompleted = complaints.filter(c => c.assignedTechId === t.id && c.status === 'Selesai').length + t.completedJobs;
         return `
@@ -2003,7 +2053,8 @@
       const unitFilter = document.getElementById('admin-filter-unit')?.value || '';
       const deptFilter = document.getElementById('admin-filter-jabatan')?.value || '';
 
-      let filtered = complaints.filter(c => {
+      const unitComplaints = getAdminComplaints();
+      let filtered = unitComplaints.filter(c => {
         const searchableValues = [c.id, c.reporterName, c.subject, c.status, c.assignedTo];
         const matchesQuery = searchableValues.some(value => String(value || '').toLowerCase().includes(query));
         const matchesUnit = unitFilter === '' || c.unit === unitFilter;
@@ -2011,10 +2062,10 @@
         return matchesQuery && matchesUnit && matchesDept;
       });
 
-      document.getElementById('kpi-card-total').textContent = complaints.length;
-      document.getElementById('kpi-card-resolved').textContent = complaints.filter(c => c.status === 'Selesai').length;
-      document.getElementById('kpi-card-pending').textContent = complaints.filter(c => c.status === 'Dalam Proses').length;
-      document.getElementById('kpi-card-urgent').textContent = complaints.filter(c => c.status === 'Belum Diagihkan' || c.urgency === 'Tinggi').length;
+      document.getElementById('kpi-card-total').textContent = unitComplaints.length;
+      document.getElementById('kpi-card-resolved').textContent = unitComplaints.filter(c => c.status === 'Selesai').length;
+      document.getElementById('kpi-card-pending').textContent = unitComplaints.filter(c => c.status === 'Dalam Proses').length;
+      document.getElementById('kpi-card-urgent').textContent = unitComplaints.filter(c => c.status === 'Belum Diagihkan').length;
 
       if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400">Tiada rekod aduan yang padan.</td></tr>`;
@@ -2197,6 +2248,10 @@
     function openComplaintDetailModal(ticketId) {
       const ticket = complaints.find(c => c.id === ticketId);
       if (!ticket) return;
+      if (!activeAdmin || ticket.unit !== activeAdmin.unit) {
+        showCustomAlert('Aduan ini bukan di bawah unit pentadbiran anda.');
+        return;
+      }
 
       document.getElementById('detail-ticket-id').textContent = ticket.id;
       document.getElementById('detail-reporter').textContent = ticket.reporterName;
@@ -2244,6 +2299,11 @@
       activeModalTicketId = ticketId;
       const ticket = complaints.find(c => c.id === ticketId);
       if (!ticket) return;
+      if (!activeAdmin || ticket.unit !== activeAdmin.unit) {
+        activeModalTicketId = null;
+        showCustomAlert('Anda hanya boleh mengagihkan aduan unit sendiri.');
+        return;
+      }
 
       document.getElementById('modal-ticket-id').textContent = ticket.id;
       document.getElementById('modal-ticket-date').textContent = `Tarikh: ${ticket.date}`;
@@ -2298,16 +2358,24 @@
       event.preventDefault();
       if (!activeModalTicketId) return;
 
-      const newUnit = document.getElementById('modal-unit-select').value;
+      const newUnit = activeAdmin?.unit;
       const selectedTechId = document.getElementById('modal-assigned-tech-select').value || null;
       const newRemarks = document.getElementById('modal-remarks-input').value;
       const currentTicket = complaints.find(c => c.id === activeModalTicketId);
+      const selectedTechnician = technicians.find(t => t.id === selectedTechId);
+      if (!activeAdmin || !currentTicket || currentTicket.unit !== activeAdmin.unit) {
+        showCustomAlert('Aduan ini bukan di bawah unit pentadbiran anda.');
+        return;
+      }
+      if (selectedTechId && (!selectedTechnician || selectedTechnician.unit !== activeAdmin.unit)) {
+        showCustomAlert('Sila pilih juruteknik daripada unit anda sahaja.');
+        return;
+      }
       let newStatus = selectedTechId ? (currentTicket?.status === 'Selesai' ? 'Selesai' : 'Dalam Proses') : 'Belum Diagihkan';
 
       let newAssignedTo = 'Belum Ditugaskan';
       if (selectedTechId) {
-        const techObj = technicians.find(t => t.id === selectedTechId);
-        newAssignedTo = techObj ? techObj.name : 'Juruteknik Bertugas';
+        newAssignedTo = selectedTechnician ? selectedTechnician.name : 'Juruteknik Bertugas';
       }
 
       const { error } = await sb.from('complaints').update({
@@ -2337,12 +2405,13 @@
     }
 
     function initOrUpdateCharts() {
+      const reportComplaints = getAdminComplaints();
       // 1. Trend Volume Bulanan
       const ctxTrend = document.getElementById('chartTrend').getContext('2d');
       if (chartTrendInstance) chartTrendInstance.destroy();
       
       const monthlyCounts = [0, 0, 0, 0, 0, 0];
-      complaints.forEach(c => {
+      reportComplaints.forEach(c => {
          if(c.date.includes('Mei')) monthlyCounts[0]++;
          if(c.date.includes('Jun')) monthlyCounts[1]++;
          if(c.date.includes('Julai')) monthlyCounts[2]++;
@@ -2375,7 +2444,7 @@
 
       // 2. Jumlah aduan mengikut nama jabatan sebenar daripada Supabase.
       const departmentMap = new Map();
-      complaints.forEach(c => {
+      reportComplaints.forEach(c => {
         const displayName = String(c.jabatan || 'Tidak Dinyatakan').trim() || 'Tidak Dinyatakan';
         const normalizedName = displayName.toLocaleLowerCase('ms-MY');
         const current = departmentMap.get(normalizedName) || { label: displayName, count: 0 };
@@ -2413,7 +2482,7 @@
 
       // 3. Agihan aduan mengikut unit bertindak sebenar.
       const unitCounts = { 'Unit UPP': 0, 'Unit ICT': 0, 'Unit PIPD': 0 };
-      complaints.forEach(c => {
+      reportComplaints.forEach(c => {
         if (unitCounts[c.unit] !== undefined) unitCounts[c.unit]++;
       });
       const ctxSla = document.getElementById('chartSla').getContext('2d');
@@ -2442,7 +2511,7 @@
 
       // 4. Status Tindakan Semasa
       const statusCounts = { 'Belum Diagihkan': 0, 'Dalam Proses': 0, Selesai: 0, Ditolak: 0 };
-      complaints.forEach(c => {
+      reportComplaints.forEach(c => {
         if (statusCounts[c.status] !== undefined) statusCounts[c.status]++;
       });
 
