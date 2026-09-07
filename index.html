@@ -755,14 +755,14 @@
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
               <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Agihan Mengikut Jabatan</h3></div>
+                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Jumlah Aduan Mengikut Jabatan Pelapor</h3></div>
               </div>
               <div class="chart-container"><canvas id="chartJabatan"></canvas></div>
             </div>
 
             <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
               <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Purata Masa Penyelesaian SLA (Jam)</h3></div>
+                <div><h3 class="text-xs font-bold uppercase tracking-wider text-slate-800">Agihan Aduan Mengikut Unit Bertindak</h3></div>
               </div>
               <div class="chart-container"><canvas id="chartSla"></canvas></div>
             </div>
@@ -2373,49 +2373,70 @@
         }
       });
 
-      // 2. Agihan Mengikut Jabatan
-      const deptCounts = { JTMK: 0, JKE: 0, JKAU: 0, JPA: 0, UPP: 0 };
+      // 2. Jumlah aduan mengikut nama jabatan sebenar daripada Supabase.
+      const departmentMap = new Map();
       complaints.forEach(c => {
-        if (deptCounts[c.jabatan] !== undefined) deptCounts[c.jabatan]++;
+        const displayName = String(c.jabatan || 'Tidak Dinyatakan').trim() || 'Tidak Dinyatakan';
+        const normalizedName = displayName.toLocaleLowerCase('ms-MY');
+        const current = departmentMap.get(normalizedName) || { label: displayName, count: 0 };
+        current.count++;
+        departmentMap.set(normalizedName, current);
       });
+      const departmentData = Array.from(departmentMap.values()).sort((a, b) => b.count - a.count);
+      const departmentLabels = departmentData.map(item => item.label);
+      const departmentCounts = departmentData.map(item => item.count);
 
       const ctxDept = document.getElementById('chartJabatan').getContext('2d');
       if (chartJabatanInstance) chartJabatanInstance.destroy();
       chartJabatanInstance = new Chart(ctxDept, {
-        type: 'doughnut',
+        type: 'bar',
         data: {
-          labels: ['JTMK', 'JKE', 'JKAU', 'JPA', 'UPP'],
+          labels: departmentLabels,
           datasets: [{
-            data: [deptCounts.JTMK, deptCounts.JKE, deptCounts.JKAU, deptCounts.JPA, deptCounts.UPP],
-            backgroundColor: ['#1e40af', '#d97706', '#059669', '#64748b', '#8b5cf6']
+            label: 'Jumlah Aduan',
+            data: departmentCounts,
+            backgroundColor: '#2563eb',
+            borderRadius: 6
           }]
         },
         options: {
+          indexAxis: 'y',
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'right', labels: { boxWidth: 12 } } }
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: context => `${context.raw} aduan` } }
+          },
+          scales: { x: { beginAtZero: true, ticks: { stepSize: 1, precision: 0 } } }
         }
       });
 
-      // 3. Purata Masa Penyelesaian SLA (Jam)
+      // 3. Agihan aduan mengikut unit bertindak sebenar.
+      const unitCounts = { 'Unit UPP': 0, 'Unit ICT': 0, 'Unit PIPD': 0 };
+      complaints.forEach(c => {
+        if (unitCounts[c.unit] !== undefined) unitCounts[c.unit]++;
+      });
       const ctxSla = document.getElementById('chartSla').getContext('2d');
       if (chartSlaInstance) chartSlaInstance.destroy();
       chartSlaInstance = new Chart(ctxSla, {
-        type: 'bar',
+        type: 'doughnut',
         data: {
           labels: ['Unit UPP', 'Unit ICT', 'Unit PIPD'],
           datasets: [{
-            label: 'Purata Masa (Jam)',
-            data: [0, 0, 0], // Dinamik jika diperlukan, buat sementara waktu diset kepada 0 untuk mula baharu
-            backgroundColor: '#059669',
-            borderRadius: 4
+            label: 'Jumlah Aduan',
+            data: [unitCounts['Unit UPP'], unitCounts['Unit ICT'], unitCounts['Unit PIPD']],
+            backgroundColor: ['#7c3aed', '#0284c7', '#059669'],
+            borderWidth: 2,
+            borderColor: '#ffffff'
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { y: { beginAtZero: true } }
+          plugins: {
+            legend: { position: 'right', labels: { boxWidth: 12 } },
+            tooltip: { callbacks: { label: context => `${context.label}: ${context.raw} aduan` } }
+          }
         }
       });
 
