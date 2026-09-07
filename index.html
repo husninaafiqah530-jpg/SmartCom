@@ -928,6 +928,46 @@
 
   </div>
 
+  <!-- ADMIN COMPLAINT DETAIL MODAL -->
+  <div id="complaint-detail-modal" class="hidden fixed inset-0 z-[55] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8">
+      <div class="bg-slate-900 text-white p-4 px-6 flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold">Maklumat Lengkap Aduan</h3>
+          <span id="detail-ticket-id" class="text-xs text-blue-200 font-mono">PN-001</span>
+        </div>
+        <button type="button" onclick="closeComplaintDetailModal()" class="w-7 h-7 rounded-lg bg-slate-700 hover:bg-red-600 text-white flex items-center justify-center">✕</button>
+      </div>
+      <div class="p-6 space-y-5 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Pelapor</span><strong id="detail-reporter"></strong></div>
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">E-mel / Peranan</span><strong id="detail-email-role"></strong></div>
+          <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Tarikh</span><strong id="detail-date"></strong></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="p-3 border border-slate-200 rounded-xl"><span class="text-[10px] uppercase font-bold text-slate-400 block">Jabatan / Unit</span><strong id="detail-department-unit"></strong></div>
+          <div class="p-3 border border-slate-200 rounded-xl"><span class="text-[10px] uppercase font-bold text-slate-400 block">Lokasi</span><strong id="detail-location"></strong></div>
+          <div class="p-3 border border-slate-200 rounded-xl"><span class="text-[10px] uppercase font-bold text-slate-400 block">Keutamaan</span><div id="detail-urgency"></div></div>
+          <div class="p-3 border border-slate-200 rounded-xl"><span class="text-[10px] uppercase font-bold text-slate-400 block">Status</span><div id="detail-status"></div></div>
+        </div>
+        <div><span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Tajuk Aduan</span><div id="detail-subject" class="font-bold text-sm text-slate-900"></div></div>
+        <div><span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Penerangan Aduan</span><div id="detail-description" class="p-3 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed"></div></div>
+        <div><span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Juruteknik Bertugas</span><div id="detail-technician" class="font-bold"></div></div>
+        <div><span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Catatan / Laporan Kerja</span><div id="detail-remarks" class="p-3 bg-slate-50 border border-slate-200 rounded-xl leading-relaxed"></div></div>
+        <div id="detail-damage-wrapper" class="hidden">
+          <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Gambar Bukti Kerosakan</span>
+          <a id="detail-damage-link" href="#" target="_blank" rel="noopener noreferrer"><img id="detail-damage-image" alt="Gambar kerosakan" class="max-h-64 rounded-xl border border-slate-300 object-contain bg-slate-50"></a>
+        </div>
+        <div id="detail-resolution-wrapper" class="hidden">
+          <span class="text-[10px] uppercase font-bold text-emerald-700 block mb-1">Gambar Bukti Penyelesaian Juruteknik</span>
+          <a id="detail-resolution-link" href="#" target="_blank" rel="noopener noreferrer"><img id="detail-resolution-image" alt="Gambar penyelesaian" class="max-h-64 rounded-xl border border-emerald-300 object-contain bg-emerald-50"></a>
+          <p id="detail-resolved-at" class="mt-1 text-[10px] text-slate-500"></p>
+        </div>
+        <div class="flex justify-end pt-2"><button type="button" onclick="closeComplaintDetailModal()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl">Tutup</button></div>
+      </div>
+    </div>
+  </div>
+
   <!-- ADMIN ASSIGN MODAL -->
   <div id="ticket-modal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
     <div class="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-slate-200 overflow-hidden my-8">
@@ -935,7 +975,7 @@
         <div class="flex items-center gap-3">
           <span id="modal-ticket-id" class="px-2.5 py-1 bg-blue-800 text-amber-300 font-mono font-bold text-xs rounded border border-blue-700">#PN-001</span>
           <div>
-            <h3 class="text-sm font-bold text-white leading-tight">Pengagihan Tugasan</h3>
+            <h3 class="text-sm font-bold text-white leading-tight">Agihkan Tugasan Kepada Juruteknik</h3>
             <span id="modal-ticket-date" class="text-[10px] text-blue-200 font-mono">Tarikh: -</span>
           </div>
         </div>
@@ -943,14 +983,14 @@
       </div>
 
       <div class="p-6 space-y-5 text-xs">
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+        <div class="hidden grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
           <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Pelapor</span><strong id="modal-reporter-name" class="text-slate-800 text-xs">Nama</strong></div>
           <div><span class="text-[10px] uppercase font-bold text-slate-400 block">E-mel / Peranan</span><strong id="modal-reporter-id" class="text-slate-800 text-xs">E-mel</strong></div>
           <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Jabatan</span><strong id="modal-reporter-dept" class="text-slate-800 text-xs">Jabatan</strong></div>
           <div><span class="text-[10px] uppercase font-bold text-slate-400 block">Keutamaan</span><span id="modal-urgency-badge" class="px-2 py-0.5 rounded font-bold text-[10px] bg-red-100 text-red-800 inline-block">Tinggi</span></div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="p-3 border border-slate-200 rounded-xl">
             <span class="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Agihan Unit Bertindak</span>
             <div id="modal-unit" class="font-bold text-blue-900">Unit</div>
@@ -962,7 +1002,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="hidden">
           <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Penerangan Terperinci Aduan</span>
           <div id="modal-details" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-700 leading-relaxed font-normal">Penerangan</div>
         </div>
@@ -982,14 +1022,14 @@
           <p id="modal-resolved-at" class="mt-1 text-[10px] text-slate-500"></p>
         </div>
 
-        <div class="pt-4 border-t border-slate-200 space-y-4">
+        <div class="space-y-4">
           <span class="text-xs font-bold text-blue-900 uppercase tracking-wider block flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full bg-blue-600"></span><span>Tugaskan Juruteknik Berdaftar & Kemaskini Status</span>
+            <span class="w-2 h-2 rounded-full bg-blue-600"></span><span>Maklumat Pengagihan Tugasan</span>
           </span>
 
           <form id="modalStatusForm" onsubmit="saveTicketChanges(event)" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="hidden">
                 <label class="block font-bold text-slate-700 mb-1">Status Tiket</label>
                 <select id="modal-status-select" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl font-bold focus:ring-2 focus:ring-blue-600 focus:outline-none">
                   <option value="Belum Diagihkan">Belum Diagihkan</option>
@@ -1928,14 +1968,15 @@
       tbody.innerHTML = filtered.map(c => `
         <tr class="hover:bg-slate-50 transition border-b border-slate-100">
           <td class="p-3 text-center"><input type="checkbox" value="${c.id}" class="row-checkbox w-4 h-4 cursor-pointer accent-blue-600" onchange="updateSelectAllState()"></td>
-          <td class="p-3 font-mono font-bold text-blue-900">${c.id}</td>
+          <td class="p-3"><button type="button" onclick="openComplaintDetailModal('${c.id}')" class="font-mono font-bold text-blue-700 hover:text-blue-900 hover:underline">${c.id}</button></td>
           <td class="p-3"><div class="font-bold text-slate-800">${c.reporterName}</div><div class="text-[10px] text-slate-500">${c.reporterEmail} (${c.role})</div></td>
           <td class="p-3"><span class="px-2 py-0.5 bg-slate-100 text-slate-700 font-bold rounded text-[10px] border border-slate-200">${c.jabatan}</span></td>
-          <td class="p-3 max-w-xs"><div class="font-bold text-slate-800 truncate">${c.subject}</div><div class="text-[10px] text-blue-700 font-medium">${c.unit}</div></td>
+          <td class="p-3 max-w-xs"><button type="button" onclick="openComplaintDetailModal('${c.id}')" class="block text-left font-bold text-slate-800 hover:text-blue-700 hover:underline truncate max-w-full">${c.subject}</button><div class="text-[10px] text-blue-700 font-medium">${c.unit}</div></td>
           <td class="p-3">${c.assignedTechId ? `<span class="font-bold text-slate-900 block">${c.assignedTo}</span><span class="text-[10px] font-mono text-emerald-700">${c.assignedTechId}</span>` : `<span class="text-red-600 font-semibold italic text-[11px]">Belum Diagih</span>`}</td>
           <td class="p-3">${getUrgencyBadgeHtml(c.urgency)}</td>
           <td class="p-3">${getStatusBadgeHtml(c.status)}</td>
           <td class="p-3 text-center flex justify-center gap-1 flex-wrap items-center">
+            <button type="button" onclick="openComplaintDetailModal('${c.id}')" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-semibold text-[10px] rounded shadow-sm transition">Lihat Aduan</button>
             <button type="button" onclick="openTicketModal('${c.id}')" class="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white font-semibold text-[10px] rounded shadow-sm transition">Agih / Urus</button>
             <button type="button" onclick="deleteComplaint('${c.id}')" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-semibold text-[10px] rounded shadow-sm transition">Padam</button>
           </td>
@@ -2097,6 +2138,52 @@
       showCustomAlert(`Kemaskini laporan kerja berjaya disimpan!`);
     }
 
+    function openComplaintDetailModal(ticketId) {
+      const ticket = complaints.find(c => c.id === ticketId);
+      if (!ticket) return;
+
+      document.getElementById('detail-ticket-id').textContent = ticket.id;
+      document.getElementById('detail-reporter').textContent = ticket.reporterName;
+      document.getElementById('detail-email-role').textContent = `${ticket.reporterEmail} (${ticket.role})`;
+      document.getElementById('detail-date').textContent = ticket.date;
+      document.getElementById('detail-department-unit').textContent = `${ticket.jabatan} / ${ticket.unit}`;
+      document.getElementById('detail-location').textContent = ticket.location;
+      document.getElementById('detail-urgency').innerHTML = getUrgencyBadgeHtml(ticket.urgency);
+      document.getElementById('detail-status').innerHTML = getStatusBadgeHtml(ticket.status);
+      document.getElementById('detail-subject').textContent = ticket.subject;
+      document.getElementById('detail-description').textContent = ticket.details || '-';
+      document.getElementById('detail-technician').textContent = ticket.assignedTechId ? `${ticket.assignedTo} (${ticket.assignedTechId})` : 'Belum ditugaskan';
+      document.getElementById('detail-remarks').textContent = ticket.remarks || '-';
+
+      const damageWrapper = document.getElementById('detail-damage-wrapper');
+      if (ticket.attachmentUrl) {
+        document.getElementById('detail-damage-link').href = ticket.attachmentUrl;
+        document.getElementById('detail-damage-image').src = ticket.attachmentUrl;
+        damageWrapper.classList.remove('hidden');
+      } else {
+        document.getElementById('detail-damage-image').removeAttribute('src');
+        damageWrapper.classList.add('hidden');
+      }
+
+      const resolutionWrapper = document.getElementById('detail-resolution-wrapper');
+      if (ticket.resolutionImageUrl) {
+        document.getElementById('detail-resolution-link').href = ticket.resolutionImageUrl;
+        document.getElementById('detail-resolution-image').src = ticket.resolutionImageUrl;
+        document.getElementById('detail-resolved-at').textContent = ticket.resolvedAt ? `Disahkan selesai pada: ${new Date(ticket.resolvedAt).toLocaleString('ms-MY')}` : '';
+        resolutionWrapper.classList.remove('hidden');
+      } else {
+        document.getElementById('detail-resolution-image').removeAttribute('src');
+        document.getElementById('detail-resolved-at').textContent = '';
+        resolutionWrapper.classList.add('hidden');
+      }
+
+      document.getElementById('complaint-detail-modal').classList.remove('hidden');
+    }
+
+    function closeComplaintDetailModal() {
+      document.getElementById('complaint-detail-modal').classList.add('hidden');
+    }
+
     function openTicketModal(ticketId) {
       activeModalTicketId = ticketId;
       const ticket = complaints.find(c => c.id === ticketId);
@@ -2155,16 +2242,16 @@
       event.preventDefault();
       if (!activeModalTicketId) return;
 
-      let newStatus = document.getElementById('modal-status-select').value;
       const newUnit = document.getElementById('modal-unit-select').value;
       const selectedTechId = document.getElementById('modal-assigned-tech-select').value || null;
       const newRemarks = document.getElementById('modal-remarks-input').value;
+      const currentTicket = complaints.find(c => c.id === activeModalTicketId);
+      let newStatus = selectedTechId ? (currentTicket?.status === 'Selesai' ? 'Selesai' : 'Dalam Proses') : 'Belum Diagihkan';
 
       let newAssignedTo = 'Belum Ditugaskan';
       if (selectedTechId) {
         const techObj = technicians.find(t => t.id === selectedTechId);
         newAssignedTo = techObj ? techObj.name : 'Juruteknik Bertugas';
-        if (newStatus === 'Belum Diagihkan') newStatus = 'Dalam Proses';
       }
 
       const { error } = await sb.from('complaints').update({
