@@ -247,7 +247,7 @@
           <div class="flex items-center gap-3">
             <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <span class="font-semibold text-slate-800">Status Operasi Penyelenggaraan:</span>
-            <span class="text-slate-600">Semua unit penyelenggaraan (IT, Elektrik, UPP, HEP) beroperasi aktif.</span>
+            <span class="text-slate-600">Semua unit pengurusan aduan (PIPD, ICT dan UPP) beroperasi aktif.</span>
           </div>
           <div class="flex gap-4 font-mono text-xs text-slate-700">
             <span>Aduan Keseluruhan: <strong class="text-blue-700 font-sans" id="hero-total-count">0</strong></span>
@@ -1355,7 +1355,7 @@
         renderTechnicianWorkspace();
       } else if (tab === 'login') {
         document.getElementById('section-login').classList.remove('hidden');
-        document.getElementById('tab-btn-login').className = 'px-3 py-1.5 rounded-md bg-slate-900 text-white font-bold border border-slate-700 transition shadow flex items-center gap-1.5';
+        document.getElementById('tab-btn-login').className = 'px-3 py-1.5 rounded-md bg-blue-600 text-white font-bold transition shadow flex items-center gap-1.5';
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
