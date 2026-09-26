@@ -1274,10 +1274,13 @@
 
     function showCustomAlert(msg) {
         const isError = /ralat|gagal|tidak sah|tidak betul|tidak sepadan|maaf|tiada rekod|amaran/i.test(String(msg));
-        const icon = isError ? '✕' : '✓';
+        const isLogout = /log keluar/i.test(String(msg));
+        const icon = (isError || isLogout) ? '✕' : '✓';
         const iconClasses = isError
           ? 'bg-red-100 text-red-600'
-          : 'bg-emerald-100 text-emerald-600';
+          : isLogout
+            ? 'bg-slate-100 text-slate-600'
+            : 'bg-emerald-100 text-emerald-600';
         const buttonClasses = isError
           ? 'bg-red-600 hover:bg-red-700'
           : 'bg-blue-600 hover:bg-blue-700';
