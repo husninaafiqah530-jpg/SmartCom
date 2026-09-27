@@ -838,7 +838,11 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-2 text-xs">
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span id="tech-active-task-badge" class="hidden px-3.5 py-2 bg-red-50 text-red-700 font-bold rounded-xl border border-red-200 shadow-sm">
+              <span class="inline-block w-2 h-2 rounded-full bg-red-500 mr-1.5 animate-pulse"></span>
+              <span id="tech-active-task-count">0</span> Tugasan Aktif
+            </span>
             <button type="button" onclick="openTechnicianPasswordModal()" class="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-semibold rounded-xl border border-emerald-700 transition">
               Tukar Kata Laluan
             </button>
@@ -1476,6 +1480,15 @@
           activeLoggedInTechId = found.id;
           document.getElementById('login-password').value = '';
           await switchMainTab('tech-workspace');
+          const activeTaskCount = complaints.filter(complaint =>
+            complaint.assignedTechId === found.id &&
+            !['Selesai', 'Ditolak'].includes(complaint.status)
+          ).length;
+          if (activeTaskCount > 0) {
+            showCustomAlert(`Makluman Tugasan: Anda mempunyai ${activeTaskCount} tugasan aktif yang perlu diselesaikan.`);
+          } else {
+            showCustomAlert('Makluman Tugasan: Tiada tugasan aktif untuk anda buat masa ini.');
+          }
         } else {
           document.getElementById('login-password').value = '';
           showCustomAlert('Ralat: ID atau kata laluan Juruteknik tidak sah.');
@@ -2263,6 +2276,11 @@
 
       const myCompleted = myJobs.filter(c => c.status === 'Selesai').length;
       const myInProgress = myJobs.filter(c => c.status === 'Dalam Proses').length;
+      const myActiveTasks = myJobs.filter(c => !['Selesai', 'Ditolak'].includes(c.status)).length;
+
+      const activeTaskBadge = document.getElementById('tech-active-task-badge');
+      document.getElementById('tech-active-task-count').textContent = myActiveTasks;
+      activeTaskBadge.classList.toggle('hidden', myActiveTasks === 0);
 
       document.getElementById('tech-card-assigned').textContent = myJobs.length;
       document.getElementById('tech-card-completed').textContent = myCompleted;
