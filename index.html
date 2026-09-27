@@ -424,6 +424,24 @@
             </div>
           </div>
 
+          <!-- Ticket Recovery Widget -->
+          <details class="rounded-xl border border-blue-200 bg-blue-50/60 overflow-hidden">
+            <summary class="cursor-pointer px-4 py-3 text-xs font-bold text-blue-900 hover:bg-blue-100/70 transition">
+              Lupa Nombor Tiket?
+            </summary>
+            <div class="px-4 pb-4 pt-1 space-y-3 border-t border-blue-100">
+              <p class="text-[11px] text-slate-600">Masukkan nama penuh dan e-mel yang sama seperti dalam borang aduan.</p>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <input type="text" id="recover-reporter-name" placeholder="Nama penuh pelapor" autocomplete="name" class="p-3 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+                <input type="email" id="recover-reporter-email" placeholder="Alamat e-mel pelapor" autocomplete="email" class="p-3 bg-white border border-slate-300 rounded-xl text-xs focus:ring-2 focus:ring-blue-600 focus:outline-none">
+              </div>
+              <button type="button" id="recover-ticket-button" onclick="recoverTicketNumbers()" class="w-full px-5 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-sm transition">
+                Cari Semula Nombor Tiket
+              </button>
+              <div id="ticket-recovery-result" aria-live="polite"></div>
+            </div>
+          </details>
+
           <!-- Privacy Security Notice -->
           <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-[11px] text-slate-600 space-y-1">
             <div class="font-bold text-slate-800 flex items-center gap-1.5">
@@ -1742,6 +1760,82 @@
       performTicketLookup();
       showCustomAlert(`Aduan berjaya dihantar! Sila simpan Nombor Tiket anda: ${newRow.id}`);
       if (submitButton) submitButton.disabled = false;
+    }
+
+    function normalizeRecoveryValue(value) {
+      return String(value || '').trim().toLocaleLowerCase('ms-MY').replace(/\s+/g, ' ');
+    }
+
+    function escapePublicText(value) {
+      return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      })[character]);
+    }
+
+    async function recoverTicketNumbers() {
+      const nameInput = document.getElementById('recover-reporter-name');
+      const emailInput = document.getElementById('recover-reporter-email');
+      const resultContainer = document.getElementById('ticket-recovery-result');
+      const searchButton = document.getElementById('recover-ticket-button');
+      const reporterName = normalizeRecoveryValue(nameInput.value);
+      const reporterEmail = normalizeRecoveryValue(emailInput.value);
+
+      if (!reporterName || !reporterEmail) {
+        resultContainer.innerHTML = '<div class="p-3 bg-amber-50 text-amber-900 rounded-xl text-[11px] font-semibold border border-amber-200">Sila masukkan nama penuh dan alamat e-mel.</div>';
+        return;
+      }
+
+      if (!emailInput.checkValidity()) {
+        resultContainer.innerHTML = '<div class="p-3 bg-red-50 text-red-900 rounded-xl text-[11px] font-semibold border border-red-200">Format alamat e-mel tidak sah.</div>';
+        return;
+      }
+
+      searchButton.disabled = true;
+      searchButton.textContent = 'Sedang Mencari...';
+
+      try {
+        await refreshData();
+        const matches = complaints
+          .filter(complaint =>
+            normalizeRecoveryValue(complaint.reporterName) === reporterName &&
+            normalizeRecoveryValue(complaint.reporterEmail) === reporterEmail
+          )
+          .sort((first, second) => second.id.localeCompare(first.id, undefined, { numeric: true }));
+
+        if (!matches.length) {
+          resultContainer.innerHTML = '<div class="p-3 bg-red-50 text-red-900 rounded-xl text-[11px] border border-red-200"><strong>Rekod tidak dijumpai.</strong><br>Pastikan nama dan e-mel sama seperti yang digunakan semasa membuat aduan.</div>';
+          return;
+        }
+
+        resultContainer.innerHTML = `
+          <div class="p-3 bg-white rounded-xl border border-blue-200 space-y-2">
+            <div class="font-bold text-xs text-blue-950">${matches.length} tiket dijumpai</div>
+            ${matches.map(complaint => `
+              <button type="button" data-recovered-ticket="${escapePublicText(complaint.id)}" class="w-full p-3 text-left rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition flex items-center justify-between gap-3">
+                <span>
+                  <span class="block font-mono font-black text-blue-900 text-sm">${escapePublicText(complaint.id)}</span>
+                  <span class="block text-[10px] text-slate-500 mt-0.5">${escapePublicText(complaint.date)} · ${escapePublicText(complaint.status)}</span>
+                </span>
+                <span class="text-[10px] font-bold text-blue-700">Semak Status →</span>
+              </button>
+            `).join('')}
+          </div>
+        `;
+
+        resultContainer.querySelectorAll('[data-recovered-ticket]').forEach(button => {
+          button.addEventListener('click', () => {
+            document.getElementById('lookup-ticket-input').value = button.dataset.recoveredTicket;
+            performTicketLookup();
+            document.getElementById('lookup-result-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          });
+        });
+      } catch (error) {
+        console.error('Carian semula nombor tiket gagal:', error);
+        resultContainer.innerHTML = '<div class="p-3 bg-red-50 text-red-900 rounded-xl text-[11px] border border-red-200">Carian gagal dilakukan. Sila cuba semula.</div>';
+      } finally {
+        searchButton.disabled = false;
+        searchButton.textContent = 'Cari Semula Nombor Tiket';
+      }
     }
 
     async function performTicketLookup() {
